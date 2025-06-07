@@ -1,1 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Tetris Touch</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #1a1a2e;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      overflow: hidden;
+      height: 100vh;
+    }
+    #gameContainer {
+      position: relative;
+      width: 90vw;
+      max-width: 400px;
+      height: 70vh;
+      max-height: 600px;
+      background: #16213e;
+      border: 5px solid #e94560;
+      border-radius: 10px;
+      overflow: hidden;
+      touch-action: none;
+    }
+    #gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #score {
+      font-size: 24px;
+      margin: 10px;
+      text-align: center;
+      color: #00ffcc;
+      text-shadow: 0 0 10px #00ffcc;
+    }
+    .block {
+      position: absolute;
+      width: 9%;
+      height: 9%;
+      transform-style: preserve-3d;
+      animation: fall 1s ease-in-out;
+    }
+    @keyframes fall {
+      0% { transform: translateZ(100px) rotateX(0deg) rotateY(0deg); opacity: 0.8; }
+      100% { transform: translateZ(0) rotateX(360deg) rotateY(360deg); opacity: 1; }
+    }
+    .line-clear {
+      animation: clearLine 0.5s ease-out forwards;
+    }
+    @keyframes clearLine {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.5); }
+    }
+    .colors {
+      background: linear-gradient(45deg, #ff0066, #00ffcc, #ffcc00, #9900ff);
+      background-size: 400%;
+      animation: gradientShift 5s ease infinite;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <div id="gameContainer">
+    <canvas id="gameCanvas"></canvas>
+  </div>
 
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('gameContainer');
+    const scoreDisplay = document.getElementById('score');
+    let score = 0;
+    const gridWidth = 10;
+    const gridHeight = 20;
+    let grid = Array(gridHeight).fill().map(() => Array(gridWidth).fill(0));
+    let currentBlock = null;
+    let gameOver = false;
+
+    // Block shapes (simplified for 3D effect)
+    const shapes = [
+      [[1, 1, 1, 1]], // I
+      [[1, 1], [1, 1]], // O
+      [[0, 1, 0], [1, 1, 1]], // T
+      [[0, 1, 1], [1, 1, 0]], // S
+      [[1, 1, 0], [0, 1, 1]]  // Z
+    ];
+    const colors = ['#ff0066', '#00ffcc', '#ffcc00', '#9900ff', '#ff6600'];
+
+    // Resize canvas
+    function resizeCanvas() {
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      cellSize = canvas.width / gridWidth;
+    }
+    let cellSize;
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Create new block
+    function newBlock() {
+      const shapeIdx = Math.floor(Math.random() * shapes.length);
+      const shape = shapes[shapeIdx];
+      const color = colors[shapeIdx];
+      const startX = Math.floor(gridWidth / 2) - Math.floor(shape[0].length / 2);
+      currentBlock = { shape, color, x: startX, y: 0 };
+    }
+
+    // Check collision
+    function checkCollision(x, y, shape) {
+      for (let i = 0; i < shape.length; i++) {
+        for (let j = 0; j < shape[i].length; j++) {
+          if (shape[i][j]) {
+            const newX = x + j;
+            const newY = y + i;
+            if (
+              newX < 0 || newX >= gridWidth ||
+              newY >= gridHeight || (newY >= 0 && grid[newY][newX])
+            ) return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    // Merge block to grid
+    function mergeBlock() {
+      for (let i = 0; i < currentBlock.shape.length; i++) {
+        for (let j = 0; j < currentBlock.shape[i].length; j++) {
+          if (currentBlock.shape[i][j]) {
+            const gridY = currentBlock.y + i;
+            const gridX = currentBlock.x + j;
+            if (gridY >= 0) grid[gridY][gridX] = currentBlock.color;
+          }
+        }
+      }
+    }
+
+    // Check and clear lines
+    function checkLines() {
+      for (let i = gridHeight - 1; i >= 0; i--) {
+        if (grid[i].every(cell => cell !== 0)) {
+          grid[i].forEach((_, j) => {
+            const block = document.createElement('div');
+            block.className = 'block line-clear';
+            block.style.background = grid[i][j];
+            block.style.left = `${j * cellSize}px`;
+            block.style.top = `${i * cellSize}px`;
+            container.appendChild(block);
+            setTimeout(() => block.remove(), 500);
+          });
+          grid.splice(i, 1);
+          grid.unshift(Array(gridWidth).fill(0));
+          score += 100;
+          scoreDisplay.textContent = `Score: ${score}`;
+        }
+      }
+    }
+
+    // Draw grid and blocks
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Draw grid
+      for (let i = 0; i < gridHeight; i++) {
+        for (let j = 0; j < gridWidth; j++) {
+          if (grid[i][j]) {
+            ctx.fillStyle = grid[i][j];
+            ctx.fillRect(j * cellSize, i * cellSize, cellSize - 2, cellSize - 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillRect(j * cellSize, i * cellSize, cellSize - 2, cellSize / 2);
+          }
+        }
+      }
+      // Draw current block
+      if (currentBlock) {
+        ctx.fillStyle = currentBlock.color;
+        for (let i = 0; i < currentBlock.shape.length; i++) {
+          for (let j = 0; j < currentBlock.shape[i].length; j++) {
+            if (currentBlock.shape[i][j]) {
+              ctx.fillRect(
+                (currentBlock.x + j) * cellSize,
+                (currentBlock.y + i) * cellSize,
+                cellSize - 2,
+                cellSize - 2
+              );
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+              ctx.fillRect(
+                (currentBlock.x + j) * cellSize,
+                (currentBlock.y + i) * cellSize,
+                cellSize - 2,
+                cellSize / 2
+              );
+              ctx.fillStyle = currentBlock.color;
+            }
+          }
+        }
+      }
+    }
+
+    // Game loop
+    function update() {
+      if (gameOver) return;
+      if (!currentBlock) newBlock();
+      if (!checkCollision(currentBlock.x, currentBlock.y + 1, currentBlock.shape)) {
+        currentBlock.y++;
+      } else {
+        if (currentBlock.y < 0) {
+          gameOver = true;
+          alert('Game Over! Score: ' + score);
+          return;
+        }
+        mergeBlock();
+        checkLines();
+        newBlock();
+      }
+      draw();
+      setTimeout(update, 1000);
+    }
+
+    // Touch controls
+    container.addEventListener('touchstart', (e) => {
+      if (!currentBlock || gameOver) return;
+      const touchX = e.touches[0].clientX - container.getBoundingClientRect().left;
+      const newX = Math.floor(touchX / cellSize);
+      if (!checkCollision(newX, currentBlock.y, currentBlock.shape)) {
+        currentBlock.x = newX;
+      }
+    });
+
+    // Start game
+    newBlock();
+    update();
+  </script>
+</body>
+</html>
