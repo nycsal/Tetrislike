@@ -4,10 +4,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>3D Tetris Mobile</title>
   <style>
-    body { margin:0; overflow:hidden; background: #111; }
-    #score { 
-      position: absolute; top: 10px; left: 10px; z-index: 2; 
-      color: #fff; font-family: sans-serif; font-size: 1.5em; 
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+      touch-action: none; /* Prevents zoom/scroll on mobile */
+    }
+    #score {
+      position: absolute; top: 10px; left: 10px; z-index: 2;
+      color: #fff; font-family: sans-serif; font-size: 1.5em;
       background: rgba(0,0,0,0.4); padding: 10px 20px; border-radius: 10px;
     }
     #gameover {
@@ -18,179 +23,177 @@
   </style>
 </head>
 <body>
-<div id="score">Score: 0</div>
-<div id="gameover">Game Over!<br>Tap to Restart</div>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-<script>
-const COLS = 10, ROWS = 20, BLOCK = 1, SPEED = 600;
-const COLORS = [0x00ffff, 0xffff00, 0x800080, 0x00ff00, 0xff0000, 0x0000ff, 0xffa500];
-const TETROMINOS = [
-  [[1,1,1,1]], // I
-  [[1,0,0],[1,1,1]], // J
-  [[0,0,1],[1,1,1]], // L
-  [[1,1],[1,1]], // O
-  [[0,1,1],[1,1,0]], // S
-  [[1,1,0],[0,1,1]], // Z
-  [[0,1,0],[1,1,1]]  // T
-];
-let scene, camera, renderer, grid, falling, fallTimer, score = 0, gameover = false;
+  <div id="score">Score: 0</div>
+  <div id="gameover">Game Over!<br>Tap to Restart</div>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+  <script>
+    const COLS = 10, ROWS = 20, BLOCK = 1, SPEED = 600;
+    const COLORS = [0x00ffff, 0xffff00, 0x800080, 0x00ff00, 0xff0000, 0x0000ff, 0xffa500];
+    const TETROMINOS = [
+      [[1,1,1,1]], [[1,0,0],[1,1,1]], [[0,0,1],[1,1,1]],
+      [[1,1],[1,1]], [[0,1,1],[1,1,0]], [[1,1,0],[0,1,1]], [[0,1,0],[1,1,1]]
+    ];
 
-function init3D() {
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 1000);
-  camera.position.set(COLS/2, -15, 28);
-  camera.lookAt(COLS/2, ROWS/2, 0);
+    let scene, camera, renderer, grid, falling, fallTimer, score = 0, gameover = false;
 
-  renderer = new THREE.WebGLRenderer({antialias:true});
-  renderer.setClearColor(0x222233);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+    function init3D() {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(COLS / 2, -15, 28);
+      camera.lookAt(COLS / 2, ROWS / 2, 0);
 
-  // Add lighting
-  let light = new THREE.DirectionalLight(0xffffff, 1);
-  light.position.set(0,0,20);
-  scene.add(light);
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x222233);
+      document.body.appendChild(renderer.domElement);
 
-  // Draw grid floor
-  let gridMat = new THREE.LineBasicMaterial({color:0x333366});
-  for(let x=0;x<=COLS;x++) {
-    let geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x,0,0),new THREE.Vector3(x,ROWS,0)]);
-    scene.add(new THREE.Line(geo,gridMat));
-  }
-  for(let y=0;y<=ROWS;y++) {
-    let geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,y,0),new THREE.Vector3(COLS,y,0)]);
-    scene.add(new THREE.Line(geo,gridMat));
-  }
-}
+      // Lighting
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+      dirLight.position.set(0, 0, 20);
+      scene.add(dirLight);
 
-function makeBlock(x, y, color) {
-  let geo = new THREE.BoxGeometry(BLOCK, BLOCK, BLOCK);
-  let mat = new THREE.MeshPhongMaterial({color, shininess: 100});
-  let mesh = new THREE.Mesh(geo, mat);
-  mesh.position.set(x+0.5, y+0.5, 0.5);
-  scene.add(mesh);
-  return mesh;
-}
+      const ambLight = new THREE.AmbientLight(0x404040);
+      scene.add(ambLight);
 
-function spawnTetromino() {
-  let idx = Math.floor(Math.random()*TETROMINOS.length);
-  let shape = TETROMINOS[idx];
-  let color = COLORS[idx];
-  let x = Math.floor((COLS-shape[0].length)/2);
-  let y = ROWS-1;
-  return {shape, color, x, y};
-}
-
-function canMove(t, dx, dy) {
-  for(let r=0;r<t.shape.length;r++) {
-    for(let c=0;c<t.shape[0].length;c++) {
-      if(t.shape[r][c]) {
-        let nx = t.x + c + dx, ny = t.y - r + dy;
-        if(nx<0 || nx>=COLS || ny<0 || grid[ny][nx]) return false;
+      // Grid lines
+      const gridMat = new THREE.LineBasicMaterial({ color: 0x333366 });
+      for (let x = 0; x <= COLS; x++) {
+        const geo = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(x, 0, 0), new THREE.Vector3(x, ROWS, 0)
+        ]);
+        scene.add(new THREE.Line(geo, gridMat));
+      }
+      for (let y = 0; y <= ROWS; y++) {
+        const geo = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(0, y, 0), new THREE.Vector3(COLS, y, 0)
+        ]);
+        scene.add(new THREE.Line(geo, gridMat));
       }
     }
-  }
-  return true;
-}
 
-function mergeTetromino(t) {
-  for(let r=0;r<t.shape.length;r++)
-    for(let c=0;c<t.shape[0].length;c++)
-      if(t.shape[r][c]) {
-        let nx = t.x + c, ny = t.y - r;
-        grid[ny][nx] = {color: t.color, mesh: makeBlock(nx, ny, t.color)};
-      }
-}
-
-function clearLines() {
-  let lines = 0;
-  for(let y=0;y<ROWS;y++) {
-    if(grid[y].every(cell=>cell)) {
-      lines++;
-      for(let x=0;x<COLS;x++) {
-        scene.remove(grid[y][x].mesh);
-      }
-      grid.splice(y,1);
-      grid.push(Array(COLS).fill(null));
-      y--;
+    function makeBlock(x, y, color) {
+      const geo = new THREE.BoxGeometry(BLOCK, BLOCK, BLOCK);
+      const mat = new THREE.MeshPhongMaterial({ color, shininess: 100 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x + 0.5, y + 0.5, 0.6);
+      scene.add(mesh);
+      return mesh;
     }
-  }
-  if(lines) {
-    score += lines*100;
-    document.getElementById('score').textContent = "Score: " + score;
-  }
-}
 
-function resetGame() {
-  // Remove all blocks
-  if(grid) for(let y=0;y<ROWS;y++)
-    for(let x=0;x<COLS;x++)
-      if(grid[y][x]) scene.remove(grid[y][x].mesh);
-  grid = [];
-  for(let y=0;y<ROWS;y++) grid[y] = Array(COLS).fill(null);
-  score = 0;
-  document.getElementById('score').textContent = "Score: 0";
-  gameover = false;
-  document.getElementById('gameover').style.display = "none";
-  falling = spawnTetromino();
-  if(fallTimer) clearInterval(fallTimer);
-  fallTimer = setInterval(fall, SPEED);
-}
+    function spawnTetromino() {
+      const idx = Math.floor(Math.random() * TETROMINOS.length);
+      const shape = TETROMINOS[idx];
+      const color = COLORS[idx];
+      const x = Math.floor((COLS - shape[0].length) / 2);
+      const y = ROWS - 1;
+      return { shape, color, x, y };
+    }
 
-function fall() {
-  if(gameover) return;
-  if(canMove(falling,0,-1)) {
-    falling.y--;
-  } else {
-    mergeTetromino(falling);
-    clearLines();
-    falling = spawnTetromino();
-    if(!canMove(falling,0,0)) {
-      gameover = true;
+    function canMove(t, dx, dy) {
+      for (let r = 0; r < t.shape.length; r++) {
+        for (let c = 0; c < t.shape[0].length; c++) {
+          if (t.shape[r][c]) {
+            const nx = t.x + c + dx, ny = t.y - r + dy;
+            if (nx < 0 || nx >= COLS || ny < 0 || grid[ny][nx]) return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function mergeTetromino(t) {
+      for (let r = 0; r < t.shape.length; r++) {
+        for (let c = 0; c < t.shape[0].length; c++) {
+          if (t.shape[r][c]) {
+            const nx = t.x + c, ny = t.y - r;
+            grid[ny][nx] = { color: t.color, mesh: makeBlock(nx, ny, t.color) };
+          }
+        }
+      }
+    }
+
+    function clearLines() {
+      let lines = 0;
+      for (let y = 0; y < ROWS; y++) {
+        if (grid[y].every(cell => cell)) {
+          lines++;
+          for (let x = 0; x < COLS; x++) scene.remove(grid[y][x].mesh);
+          grid.splice(y, 1);
+          grid.push(Array(COLS).fill(null));
+          y--;
+        }
+      }
+      if (lines) {
+        score += lines * 100;
+        document.getElementById('score').textContent = "Score: " + score;
+      }
+    }
+
+    function resetGame() {
+      if (grid) {
+        for (let y = 0; y < ROWS; y++)
+          for (let x = 0; x < COLS; x++)
+            if (grid[y][x]) scene.remove(grid[y][x].mesh);
+      }
+      grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+      score = 0;
+      gameover = false;
+      document.getElementById('score').textContent = "Score: 0";
+      document.getElementById('gameover').style.display = "none";
+      falling = spawnTetromino();
       clearInterval(fallTimer);
-      document.getElementById('gameover').style.display = "block";
-      return;
+      fallTimer = setInterval(fall, SPEED);
     }
-  }
-}
 
-function dropTo(col) {
-  // Move tetromino to selected column if possible
-  let t = falling;
-  let minX = 0, maxX = COLS-t.shape[0].length;
-  let nx = Math.max(minX, Math.min(maxX, col));
-  t.x = nx;
-  // Drop it instantly to bottom
-  while(canMove(t,0,-1)) t.y--;
-  fall();
-}
+    function fall() {
+      if (gameover) return;
+      if (canMove(falling, 0, -1)) {
+        falling.y--;
+      } else {
+        mergeTetromino(falling);
+        clearLines();
+        falling = spawnTetromino();
+        if (!canMove(falling, 0, 0)) {
+          gameover = true;
+          clearInterval(fallTimer);
+          document.getElementById('gameover').style.display = "block";
+        }
+      }
+    }
 
-function animate() {
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
-}
+    function dropTo(col) {
+      let t = falling;
+      let maxX = COLS - t.shape[0].length;
+      t.x = Math.max(0, Math.min(maxX, col));
+      while (canMove(t, 0, -1)) t.y--;
+      fall();
+    }
 
-// Touch controls: tap a column to drop
-rendererDomReady = false;
-function setupTouch() {
-  renderer.domElement.addEventListener('touchstart', function(e){
-    if(gameover) { resetGame(); return; }
-    let rect = renderer.domElement.getBoundingClientRect();
-    let tx = e.touches[0].clientX - rect.left;
-    let col = Math.floor(tx / rect.width * COLS);
-    dropTo(col);
-  });
-}
-window.addEventListener('resize', ()=>{
-  camera.aspect = window.innerWidth/window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+    function setupInput() {
+      renderer.domElement.addEventListener('pointerdown', e => {
+        if (gameover) return resetGame();
+        const rect = renderer.domElement.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const col = Math.floor(x / rect.width * COLS);
+        dropTo(col);
+      });
+    }
 
-init3D();
-resetGame();
-setupTouch();
-animate();
-</script>
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    init3D();
+    resetGame();
+    setupInput();
+    animate();
+  </script>
 </body>
 </html>
