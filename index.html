@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Agent Ish</title>
+    <title>KakaReza</title>
     <meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         html, body {
@@ -244,7 +244,7 @@
 </head>
 <body>
     <div class="game-header">
-        <span class="brand">Agent Ish</span>
+        <span class="brand">KakaReza</span>
         <div class="scoreboard">
             <div class="score-label">Score: <span id="score">0</span>
                 <span class="score-pop" id="scorePop"></span>
@@ -426,8 +426,9 @@
                         if (shape[row][col]) {
                             const boardX = newX + col;
                             const boardY = newY + row;
-                            if (boardX < 0 || boardX >= this.width || boardY >= this.height) return false;
-                            if (boardY >= 0 && this.board[boardY][boardX]) return false;
+                            // Prevent out of bounds
+                            if (boardX < 0 || boardX >= this.width || boardY < 0 || boardY >= this.height) return false;
+                            if (this.board[boardY][boardX]) return false;
                         }
                     }
                 }
@@ -450,12 +451,14 @@
                 const type = this.currentPiece.type;
                 const nextRot = (this.currentPiece.rotation + 1) % 4;
                 const rotated = this.pieces[type][nextRot];
-                // Wall kick: try to nudge piece left/right if blocked
+                // Try wall kicks: 0, -1, 1, -2, 2
                 for (let offset of [0, -1, 1, -2, 2]) {
                     if (this.isValidPosition(this.currentPiece, offset, 0, rotated)) {
                         this.currentPiece.rotation = nextRot;
                         this.currentPiece.shape = rotated.map(row => row.slice());
                         this.currentPiece.x += offset;
+                        // Clamp X so piece never goes out of bounds after rotation
+                        this.currentPiece.x = Math.max(0, Math.min(this.currentPiece.x, this.width - rotated[0].length));
                         this.render();
                         break;
                     }
@@ -566,11 +569,16 @@
                     for (let row = 0; row < this.currentPiece.shape.length; row++) {
                         for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
                             if (this.currentPiece.shape[row][col]) {
-                                const block = document.createElement('div');
-                                block.className = `block ${this.currentPiece.color}`;
-                                block.style.left = ((this.currentPiece.x + col) * 30) + 'px';
-                                block.style.top = ((this.currentPiece.y + row) * 30) + 'px';
-                                this.gameBoard.appendChild(block);
+                                // Don't draw outside board
+                                const x = this.currentPiece.x + col;
+                                const y = this.currentPiece.y + row;
+                                if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+                                    const block = document.createElement('div');
+                                    block.className = `block ${this.currentPiece.color}`;
+                                    block.style.left = (x * 30) + 'px';
+                                    block.style.top = (y * 30) + 'px';
+                                    this.gameBoard.appendChild(block);
+                                }
                             }
                         }
                     }
