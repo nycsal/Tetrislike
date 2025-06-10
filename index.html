@@ -12,11 +12,6 @@
             overflow: hidden;
             touch-action: none;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            animation: backgroundPulse 8s ease-in-out infinite alternate;
-        }
-        @keyframes backgroundPulse {
-            0% { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-            100% { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); }
         }
         body {
             font-family: 'Arial', sans-serif;
@@ -35,12 +30,11 @@
             font-family: 'Arial Black', Arial, sans-serif;
             font-size: 1.3em;
             letter-spacing: 2px;
-            text-shadow: 2px 2px 8px #000, 0 0 20px #ffd93d;
+            text-shadow: 2px 2px 8px #000;
             width: 100vw;
             box-sizing: border-box;
             z-index: 10;
             position: relative;
-            backdrop-filter: blur(10px);
         }
         .game-header .brand {
             font-size: 1.2em;
@@ -49,12 +43,7 @@
             letter-spacing: 1.5px;
             margin-bottom: 3px;
             display: block;
-            text-shadow: 0 2px 8px #764ba2, 0 0 30px #ffd93d;
-            animation: neonGlow 2s ease-in-out infinite alternate;
-        }
-        @keyframes neonGlow {
-            0% { text-shadow: 0 2px 8px #764ba2, 0 0 30px #ffd93d; }
-            100% { text-shadow: 0 2px 8px #764ba2, 0 0 50px #ffd93d, 0 0 70px #ffd93d; }
+            text-shadow: 0 2px 8px #764ba2;
         }
         .scoreboard {
             display: flex;
@@ -67,7 +56,6 @@
             font-size: 20px;
             font-weight: bold;
             position: relative;
-            text-shadow: 0 0 10px #fff;
         }
         .score-pop {
             position: absolute;
@@ -80,7 +68,6 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s, top 0.3s;
-            text-shadow: 0 0 20px #ffd93d;
         }
         .score-pop.active {
             opacity: 1;
@@ -99,26 +86,18 @@
             justify-content: center;
             align-items: center;
             width: 100vw;
-            padding-bottom: 100px; /* Move play area up by moving container up */
         }
         .game-board {
             width: 300px;
-            height: 570px; /* Reduced height to accommodate bottom margin */
-            border: 3px solid rgba(255,255,255,0.5);
+            height: 600px;
+            border: 3px solid rgba(255,255,255,0.3);
             border-radius: 15px;
             background: rgba(0,0,0,0.2);
             backdrop-filter: blur(20px);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3), 
-                        0 0 30px rgba(102, 126, 234, 0.3),
-                        inset 0 0 30px rgba(255,255,255,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             touch-action: none;
-            animation: boardGlow 3s ease-in-out infinite alternate;
-        }
-        @keyframes boardGlow {
-            0% { box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(102, 126, 234, 0.3), inset 0 0 30px rgba(255,255,255,0.1); }
-            100% { box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 50px rgba(102, 126, 234, 0.5), inset 0 0 30px rgba(255,255,255,0.1); }
         }
         .block {
             position: absolute;
@@ -126,61 +105,23 @@
             height: 30px;
             border-radius: 8px;
             border: 2px solid rgba(255,255,255,0.3);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3), 
-                        inset 0 2px 4px rgba(255,255,255,0.2),
-                        0 0 15px rgba(255,255,255,0.2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2);
             transition: box-shadow 0.2s, transform 0.2s;
-            animation: blockPulse 2s ease-in-out infinite alternate;
         }
-        @keyframes blockPulse {
-            0% { box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), 0 0 15px rgba(255,255,255,0.2); }
-            100% { box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), 0 0 25px rgba(255,255,255,0.4); }
-        }
-        .block.red { 
-            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), 0 0 15px rgba(255, 107, 107, 0.4);
-        }
-        .block.blue { 
-            background: linear-gradient(45deg, #4ecdc4, #44a08d);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), 0 0 15px rgba(78, 205, 196, 0.4);
-        }
-        .block.green { 
-            background: linear-gradient(45deg, #95e1d3, #81c784);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), 0 0 15px rgba(149, 225, 211, 0.4);
-        }
-        .block.yellow { 
-            background: linear-gradient(45deg, #ffd93d, #ffb74d);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), 0 0 15px rgba(255, 217, 61, 0.4);
-        }
-        .block.purple { 
-            background: linear-gradient(45deg, #a8e6cf, #9c88ff);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), 0 0 15px rgba(156, 136, 255, 0.4);
-        }
-        .block.orange { 
-            background: linear-gradient(45deg, #ff8a80, #ff7043);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), 0 0 15px rgba(255, 138, 128, 0.4);
-        }
-        .block.cyan { 
-            background: linear-gradient(45deg, #80deea, #4dd0e1);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), 0 0 15px rgba(128, 222, 234, 0.4);
-        }
+        .block.red { background: linear-gradient(45deg, #ff6b6b, #ee5a52); }
+        .block.blue { background: linear-gradient(45deg, #4ecdc4, #44a08d); }
+        .block.green { background: linear-gradient(45deg, #95e1d3, #81c784); }
+        .block.yellow { background: linear-gradient(45deg, #ffd93d, #ffb74d); }
+        .block.purple { background: linear-gradient(45deg, #a8e6cf, #9c88ff); }
+        .block.orange { background: linear-gradient(45deg, #ff8a80, #ff7043); }
+        .block.cyan { background: linear-gradient(45deg, #80deea, #4dd0e1); }
         .block.clear-anim {
             animation: blockClear 0.4s cubic-bezier(.2,1,.7,1.2);
         }
         @keyframes blockClear {
-            0% { 
-                box-shadow: 0 0 0 0 #ffd93d, 0 4px 8px rgba(0,0,0,0.3);
-                transform: scale(1) rotate(0deg);
-            }
-            60% { 
-                box-shadow: 0 0 20px 8px #ffd93d, 0 4px 8px rgba(0,0,0,0.3);
-                transform: scale(1.2) rotate(180deg);
-            }
-            100% { 
-                opacity: 0; 
-                box-shadow: 0 0 40px 16px #ffd93d, 0 4px 8px rgba(0,0,0,0.3);
-                transform: scale(0.5) rotate(360deg);
-            }
+            0% { box-shadow: 0 0 0 0 #ffd93d, 0 4px 8px rgba(0,0,0,0.3); }
+            60% { box-shadow: 0 0 20px 8px #ffd93d, 0 4px 8px rgba(0,0,0,0.3); }
+            100% { opacity: 0; box-shadow: 0 0 40px 16px #ffd93d, 0 4px 8px rgba(0,0,0,0.3); }
         }
         .next-piece {
             position: absolute;
@@ -192,7 +133,6 @@
             border-radius: 10px;
             border: 2px solid rgba(255,255,255,0.2);
             backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(255,255,255,0.1);
         }
         .next-label {
             color: white;
@@ -200,7 +140,6 @@
             padding: 5px;
             font-size: 14px;
             font-weight: bold;
-            text-shadow: 0 0 10px #fff;
         }
         .game-over {
             position: absolute;
@@ -215,19 +154,11 @@
             backdrop-filter: blur(20px);
             display: none;
             z-index: 10;
-            box-shadow: 0 0 50px rgba(255, 107, 107, 0.5);
-            border: 2px solid rgba(255, 107, 107, 0.3);
         }
         .game-over h2 {
             margin-bottom: 15px;
             font-size: 28px;
             color: #ff6b6b;
-            text-shadow: 0 0 20px #ff6b6b;
-            animation: gameOverGlow 1s ease-in-out infinite alternate;
-        }
-        @keyframes gameOverGlow {
-            0% { text-shadow: 0 0 20px #ff6b6b; }
-            100% { text-shadow: 0 0 40px #ff6b6b, 0 0 60px #ff6b6b; }
         }
         .restart-btn {
             background: linear-gradient(45deg, #667eea, #764ba2);
@@ -238,12 +169,6 @@
             font-size: 16px;
             margin-top: 15px;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-            transition: all 0.3s ease;
-        }
-        .restart-btn:hover {
-            box-shadow: 0 0 40px rgba(102, 126, 234, 0.6);
-            transform: translateY(-2px);
         }
         /* --- Control Buttons --- */
         .controls-overlay {
@@ -264,26 +189,19 @@
             background: rgba(255,255,255,0.18);
             border: 2px solid rgba(255,255,255,0.25);
             border-radius: 50%;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 0 20px rgba(255,255,255,0.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
             font-size: 2.2em;
             color: #fff;
-            text-shadow: 0 2px 6px #764ba2, 0 0 15px #fff;
+            text-shadow: 0 2px 6px #764ba2;
             display: flex;
             align-items: center;
             justify-content: center;
             pointer-events: auto;
-            transition: all 0.3s ease;
+            transition: background 0.2s;
             user-select: none;
-            animation: controlPulse 3s ease-in-out infinite alternate;
-        }
-        @keyframes controlPulse {
-            0% { box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 0 20px rgba(255,255,255,0.1); }
-            100% { box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 0 30px rgba(255,255,255,0.2); }
         }
         .control-btn:active {
             background: rgba(255,255,255,0.32);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 0 40px rgba(255,255,255,0.4);
-            transform: scale(0.95);
         }
         .btn-left { align-self: center; }
         .btn-right { align-self: center; }
@@ -306,7 +224,7 @@
         @media (max-width: 480px) {
             .game-board {
                 width: 280px;
-                height: 532px; /* Adjusted for smaller screens */
+                height: 560px;
             }
             .next-piece {
                 right: -110px;
@@ -365,7 +283,7 @@
         class TetrisGame {
             constructor() {
                 this.width = 10;
-                this.height = 19; // Reduced from 20 to 19 to provide more bottom margin
+                this.height = 20;
                 this.board = Array(this.height).fill().map(() => Array(this.width).fill(0));
                 this.colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'cyan'];
                 this.pieces = [
@@ -509,7 +427,6 @@
                         if (shape[row][col]) {
                             const x = piece.x + col;
                             const y = piece.y + row;
-                            // Ensure blocks stay within the reduced height boundary
                             if (x < 0 || x >= this.width || y < 0 || y >= this.height) return false;
                             if (this.board[y][x]) return false;
                         }
@@ -640,4 +557,64 @@
             render() {
                 Array.from(this.gameBoard.querySelectorAll('.block')).forEach(block => block.remove());
                 for (let row = 0; row < this.height; row++) {
-                    for (let col = 0; col < this.width; col++)
+                    for (let col = 0; col < this.width; col++) {
+                        if (this.board[row][col]) {
+                            const block = document.createElement('div');
+                            block.className = `block ${this.board[row][col]}`;
+                            block.style.left = (col * 30) + 'px';
+                            block.style.top = (row * 30) + 'px';
+                            this.gameBoard.appendChild(block);
+                        }
+                    }
+                }
+                if (this.currentPiece) {
+                    for (let row = 0; row < this.currentPiece.shape.length; row++) {
+                        for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
+                            if (this.currentPiece.shape[row][col]) {
+                                const x = this.currentPiece.x + col;
+                                const y = this.currentPiece.y + row;
+                                if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+                                    const block = document.createElement('div');
+                                    block.className = `block ${this.currentPiece.color}`;
+                                    block.style.left = (x * 30) + 'px';
+                                    block.style.top = (y * 30) + 'px';
+                                    this.gameBoard.appendChild(block);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            updateDisplay() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('lines').textContent = this.lines;
+            }
+
+            animateScore(text) {
+                const pop = document.getElementById('scorePop');
+                pop.textContent = text;
+                pop.classList.remove('active');
+                void pop.offsetWidth;
+                pop.classList.add('active');
+            }
+
+            gameOver() {
+                this.gameRunning = false;
+                clearInterval(this.gameInterval);
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('gameOver').style.display = 'block';
+            }
+        }
+
+        let game = new TetrisGame();
+
+        function startNewGame() {
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('gameBoard').innerHTML = '<div class="next-piece"><div class="next-label">NEXT</div><div id="nextPiece"></div></div>';
+            game = new TetrisGame();
+        }
+    </script>
+</body>
+</html>
