@@ -170,7 +170,6 @@
             margin-top: 15px;
             cursor: pointer;
         }
-        /* --- Control Buttons --- */
         .controls-overlay {
             position: fixed;
             left: 0; right: 0; bottom: 0;
@@ -275,7 +274,6 @@
         <div class="control-btn btn-right" id="btnRight">&#8680;</div>
     </div>
     <script>
-        // Prevent scrolling/zooming on mobile
         document.body.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
         document.body.addEventListener('gesturestart', function(e) { e.preventDefault(); });
         document.body.addEventListener('dblclick', function(e) { e.preventDefault(); });
@@ -284,53 +282,51 @@
             constructor() {
                 this.width = 10;
                 this.height = 20;
+                this.reset();
+                this.setupButtonControls();
+                this.startGameLoop();
+            }
+
+            reset() {
                 this.board = Array(this.height).fill().map(() => Array(this.width).fill(0));
                 this.colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'cyan'];
                 this.pieces = [
-                    // 4 rotation states for each piece (clockwise)
-                    // I
                     [
                         [[1,1,1,1]],
                         [[1],[1],[1],[1]],
                         [[1,1,1,1]],
                         [[1],[1],[1],[1]]
                     ],
-                    // O
                     [
                         [[1,1],[1,1]],
                         [[1,1],[1,1]],
                         [[1,1],[1,1]],
                         [[1,1],[1,1]]
                     ],
-                    // T
                     [
                         [[0,1,0],[1,1,1]],
                         [[1,0],[1,1],[1,0]],
                         [[1,1,1],[0,1,0]],
                         [[0,1],[1,1],[0,1]]
                     ],
-                    // S
                     [
                         [[0,1,1],[1,1,0]],
                         [[1,0],[1,1],[0,1]],
                         [[0,1,1],[1,1,0]],
                         [[1,0],[1,1],[0,1]]
                     ],
-                    // Z
                     [
                         [[1,1,0],[0,1,1]],
                         [[0,1],[1,1],[1,0]],
                         [[1,1,0],[0,1,1]],
                         [[0,1],[1,1],[1,0]]
                     ],
-                    // J
                     [
                         [[1,0,0],[1,1,1]],
                         [[1,1],[1,0],[1,0]],
                         [[1,1,1],[0,0,1]],
                         [[0,1],[0,1],[1,1]]
                     ],
-                    // L
                     [
                         [[0,0,1],[1,1,1]],
                         [[1,0],[1,0],[1,1]],
@@ -350,21 +346,18 @@
                 this.generateNextPiece();
                 this.spawnPiece();
                 this.updateDisplay();
-                this.setupButtonControls();
-                this.startGameLoop();
             }
 
             setupButtonControls() {
-                document.getElementById('btnLeft').addEventListener('touchstart', e => { e.preventDefault(); this.tryMove(-1, 0); });
-                document.getElementById('btnRight').addEventListener('touchstart', e => { e.preventDefault(); this.tryMove(1, 0); });
-                document.getElementById('btnRotate').addEventListener('touchstart', e => { e.preventDefault(); this.tryRotate(); });
-                document.getElementById('btnDrop').addEventListener('touchstart', e => { e.preventDefault(); this.hardDrop(); });
+                document.getElementById('btnLeft').onclick = () => this.tryMove(-1, 0);
+                document.getElementById('btnRight').onclick = () => this.tryMove(1, 0);
+                document.getElementById('btnRotate').onclick = () => this.tryRotate();
+                document.getElementById('btnDrop').onclick = () => this.hardDrop();
 
-                // Mouse fallback
-                document.getElementById('btnLeft').addEventListener('mousedown', e => { e.preventDefault(); this.tryMove(-1, 0); });
-                document.getElementById('btnRight').addEventListener('mousedown', e => { e.preventDefault(); this.tryMove(1, 0); });
-                document.getElementById('btnRotate').addEventListener('mousedown', e => { e.preventDefault(); this.tryRotate(); });
-                document.getElementById('btnDrop').addEventListener('mousedown', e => { e.preventDefault(); this.hardDrop(); });
+                document.getElementById('btnLeft').ontouchstart = (e) => { e.preventDefault(); this.tryMove(-1, 0); };
+                document.getElementById('btnRight').ontouchstart = (e) => { e.preventDefault(); this.tryMove(1, 0); };
+                document.getElementById('btnRotate').ontouchstart = (e) => { e.preventDefault(); this.tryRotate(); };
+                document.getElementById('btnDrop').ontouchstart = (e) => { e.preventDefault(); this.hardDrop(); };
             }
 
             generateNextPiece() {
@@ -419,7 +412,6 @@
                 this.render();
             }
 
-            // Strict boundary check: all blocks must be inside grid and not collide
             isValidPosition(piece) {
                 const shape = piece.shape;
                 for (let row = 0; row < shape.length; row++) {
@@ -435,8 +427,8 @@
                 return true;
             }
 
-            // Try to move, only if all blocks stay inside
             tryMove(dx, dy) {
+                if (!this.gameRunning) return false;
                 const testPiece = {
                     ...this.currentPiece,
                     x: this.currentPiece.x + dx,
@@ -450,12 +442,11 @@
                 return false;
             }
 
-            // Try to rotate, only if all blocks stay inside
             tryRotate() {
+                if (!this.gameRunning) return;
                 const type = this.currentPiece.type;
                 const nextRot = (this.currentPiece.rotation + 1) % 4;
                 const rotated = this.pieces[type][nextRot];
-                // Try wall kicks: 0, -1, 1, -2, 2
                 for (let offset of [0, -1, 1, -2, 2]) {
                     let testPiece = {
                         ...this.currentPiece,
@@ -471,8 +462,8 @@
                 }
             }
 
-            // Hard drop: keep moving down until can't
             hardDrop() {
+                if (!this.gameRunning) return;
                 let dropped = 0;
                 while (this.tryMove(0, 1)) dropped++;
                 if (dropped > 0) this.animateScore("+" + (dropped * 2));
@@ -543,7 +534,7 @@
             }
 
             gameLoop() {
-                if (!this.gameRunning || this.isPaused) return;
+                if (!this.gameRunning) return;
                 if (!this.tryMove(0, 1)) {
                     this.lockPiece();
                 }
@@ -618,4 +609,3 @@
     </script>
 </body>
 </html>
-
