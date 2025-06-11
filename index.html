@@ -11,7 +11,7 @@
             padding: 0;
             overflow: hidden;
             touch-action: none;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #181a22;
         }
         body {
             font-family: 'Arial', sans-serif;
@@ -92,7 +92,7 @@
             height: 600px;
             border: 3px solid rgba(255,255,255,0.3);
             border-radius: 15px;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.4);
             backdrop-filter: blur(20px);
             position: relative;
             overflow: hidden;
@@ -352,12 +352,12 @@
                 document.getElementById('btnLeft').onclick = () => this.tryMove(-1, 0);
                 document.getElementById('btnRight').onclick = () => this.tryMove(1, 0);
                 document.getElementById('btnRotate').onclick = () => this.tryRotate();
-                document.getElementById('btnDrop').onclick = () => this.hardDrop();
+                document.getElementById('btnDrop').onclick = () => this.tryMove(0, 1);
 
                 document.getElementById('btnLeft').ontouchstart = (e) => { e.preventDefault(); this.tryMove(-1, 0); };
                 document.getElementById('btnRight').ontouchstart = (e) => { e.preventDefault(); this.tryMove(1, 0); };
                 document.getElementById('btnRotate').ontouchstart = (e) => { e.preventDefault(); this.tryRotate(); };
-                document.getElementById('btnDrop').ontouchstart = (e) => { e.preventDefault(); this.hardDrop(); };
+                document.getElementById('btnDrop').ontouchstart = (e) => { e.preventDefault(); this.tryMove(0, 1); };
             }
 
             generateNextPiece() {
@@ -438,6 +438,9 @@
                     this.currentPiece = testPiece;
                     this.render();
                     return true;
+                } else if (dy === 1) {
+                    // If can't move down, lock piece and spawn new one
+                    this.lockPiece();
                 }
                 return false;
             }
@@ -460,14 +463,6 @@
                         break;
                     }
                 }
-            }
-
-            hardDrop() {
-                if (!this.gameRunning) return;
-                let dropped = 0;
-                while (this.tryMove(0, 1)) dropped++;
-                if (dropped > 0) this.animateScore("+" + (dropped * 2));
-                this.lockPiece();
             }
 
             lockPiece() {
@@ -535,9 +530,7 @@
 
             gameLoop() {
                 if (!this.gameRunning) return;
-                if (!this.tryMove(0, 1)) {
-                    this.lockPiece();
-                }
+                this.tryMove(0, 1);
             }
 
             startGameLoop() {
