@@ -20,7 +20,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
         }
         .game-header {
             color: #fff;
@@ -81,10 +80,8 @@
             100% { opacity: 0; top: -60px; }
         }
         .game-container {
-            flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
             width: 100vw;
         }
@@ -99,6 +96,7 @@
             overflow: hidden;
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             touch-action: none;
+            margin-top: 10px;
         }
         .block {
             position: absolute;
@@ -172,13 +170,23 @@
             cursor: pointer;
         }
         .controls-bar {
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            width: 100vw;
+            max-width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(24,26,34,0.95);
+            z-index: 100;
+            padding: 10px 0 10px 0;
+            box-sizing: border-box;
+        }
+        .controls-bar-inner {
             width: 300px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 10px auto 0 auto;
-            pointer-events: none;
-            z-index: 30;
         }
         .control-btn {
             width: 70px;
@@ -202,7 +210,7 @@
             background: rgba(255,255,255,0.32);
         }
         @media (max-width: 480px) {
-            .game-board, .controls-bar {
+            .game-board, .controls-bar-inner {
                 width: 280px;
             }
             .next-piece {
@@ -239,7 +247,9 @@
             <p>Final Score: <span id="finalScore">0</span></p>
             <button class="restart-btn" onclick="startNewGame()">Play Again</button>
         </div>
-        <div class="controls-bar">
+    </div>
+    <div class="controls-bar">
+        <div class="controls-bar-inner">
             <div class="control-btn" id="btnLeft">&#8678;</div>
             <div class="control-btn" id="btnRotate">&#8635;</div>
             <div class="control-btn" id="btnDrop">&#11015;</div>
