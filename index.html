@@ -83,6 +83,7 @@
         .game-container {
             flex: 1;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             width: 100vw;
@@ -170,21 +171,19 @@
             margin-top: 15px;
             cursor: pointer;
         }
-        .controls-overlay {
-            position: fixed;
-            left: 0; right: 0; bottom: 0;
-            width: 100vw;
-            height: 120px;
-            pointer-events: none;
-            z-index: 20;
+        .controls-bar {
+            width: 300px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            align-items: center;
+            margin: 10px auto 0 auto;
+            pointer-events: none;
+            z-index: 30;
         }
         .control-btn {
             width: 70px;
             height: 70px;
-            margin: 0 10px;
+            margin: 0 5px;
             background: rgba(255,255,255,0.18);
             border: 2px solid rgba(255,255,255,0.25);
             border-radius: 50%;
@@ -202,28 +201,9 @@
         .control-btn:active {
             background: rgba(255,255,255,0.32);
         }
-        .btn-left { align-self: center; }
-        .btn-right { align-self: center; }
-        .center-controls {
-            display: flex;
-            flex-direction: row;
-            align-items: flex-end;
-            gap: 16px;
-            margin-bottom: 10px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .btn-rotate, .btn-drop {
-            width: 56px;
-            height: 56px;
-            font-size: 1.5em;
-            margin: 0 2px;
-            background: rgba(255,255,255,0.13);
-        }
         @media (max-width: 480px) {
-            .game-board {
+            .game-board, .controls-bar {
                 width: 280px;
-                height: 560px;
             }
             .next-piece {
                 right: -110px;
@@ -232,11 +212,6 @@
                 width: 58px;
                 height: 58px;
                 font-size: 1.7em;
-            }
-            .btn-rotate, .btn-drop {
-                width: 44px;
-                height: 44px;
-                font-size: 1.1em;
             }
         }
     </style>
@@ -264,14 +239,12 @@
             <p>Final Score: <span id="finalScore">0</span></p>
             <button class="restart-btn" onclick="startNewGame()">Play Again</button>
         </div>
-    </div>
-    <div class="controls-overlay">
-        <div class="control-btn btn-left" id="btnLeft">&#8678;</div>
-        <div class="center-controls">
-            <div class="control-btn btn-rotate" id="btnRotate">&#8635;</div>
-            <div class="control-btn btn-drop" id="btnDrop">&#11015;</div>
+        <div class="controls-bar">
+            <div class="control-btn" id="btnLeft">&#8678;</div>
+            <div class="control-btn" id="btnRotate">&#8635;</div>
+            <div class="control-btn" id="btnDrop">&#11015;</div>
+            <div class="control-btn" id="btnRight">&#8680;</div>
         </div>
-        <div class="control-btn btn-right" id="btnRight">&#8680;</div>
     </div>
     <script>
         document.body.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
