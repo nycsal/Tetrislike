@@ -93,7 +93,7 @@
             background: rgba(0,0,0,0.4);
             backdrop-filter: blur(20px);
             position: relative;
-            overflow: hidden;
+            overflow: hidden; /* This is crucial for preventing visual overflow */
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             touch-action: none;
             margin-top: 10px;
@@ -132,13 +132,23 @@
             border-radius: 10px;
             border: 2px solid rgba(255,255,255,0.2);
             backdrop-filter: blur(10px);
+            display: flex; /* Use flexbox to center content */
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
         }
         .next-label {
             color: white;
             text-align: center;
-            padding: 5px;
+            padding-bottom: 5px; /* Add padding to separate from piece */
             font-size: 14px;
             font-weight: bold;
+        }
+        .next-piece-display { /* New container for the piece itself */
+            position: relative;
+            width: 80px; /* Adjust as needed to fit pieces */
+            height: 80px; /* Adjust as needed to fit pieces */
+            /* Removed background, border, etc. as main .next-piece handles it */
         }
         .game-over {
             position: absolute;
@@ -239,8 +249,7 @@
         <div class="game-board" id="gameBoard">
             <div class="next-piece">
                 <div class="next-label">NEXT</div>
-                <div id="nextPiece"></div>
-            </div>
+                <div id="nextPieceDisplay" class="next-piece-display"></div> </div>
         </div>
         <div class="game-over" id="gameOver">
             <h2>Game Over!</h2>
@@ -252,7 +261,8 @@
         <div class="controls-bar-inner">
             <div class="control-btn" id="btnLeft">&#8678;</div>
             <div class="control-btn" id="btnRotate">&#8635;</div>
-            <div class="control-btn" id="btnDrop">&#11015;</div> <div class="control-btn" id="btnRight">&#8680;</div>
+            <div class="control-btn" id="btnDrop">&#11015;</div>
+            <div class="control-btn" id="btnRight">&#8680;</div>
         </div>
     </div>
     <script>
@@ -264,6 +274,7 @@
             constructor() {
                 this.width = 10;
                 this.height = 20;
+                this.blockSize = 30; // Define block size for consistent calculations
                 this.reset();
                 this.setupButtonControls();
                 this.startGameLoop();
@@ -273,43 +284,43 @@
                 this.board = Array(this.height).fill().map(() => Array(this.width).fill(0));
                 this.colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'cyan'];
                 this.pieces = [
-                    [ // I Piece
+                    [ // I Piece (Index 0)
                         [[1,1,1,1]],
                         [[1],[1],[1],[1]],
                         [[1,1,1,1]],
                         [[1],[1],[1],[1]]
                     ],
-                    [ // O Piece
+                    [ // O Piece (Index 1)
                         [[1,1],[1,1]],
                         [[1,1],[1,1]],
                         [[1,1],[1,1]],
                         [[1,1],[1,1]]
                     ],
-                    [ // T Piece
+                    [ // T Piece (Index 2)
                         [[0,1,0],[1,1,1]],
                         [[1,0],[1,1],[1,0]],
                         [[1,1,1],[0,1,0]],
                         [[0,1],[1,1],[0,1]]
                     ],
-                    [ // S Piece
+                    [ // S Piece (Index 3)
                         [[0,1,1],[1,1,0]],
                         [[1,0],[1,1],[0,1]],
                         [[0,1,1],[1,1,0]],
                         [[1,0],[1,1],[0,1]]
                     ],
-                    [ // Z Piece
+                    [ // Z Piece (Index 4)
                         [[1,1,0],[0,1,1]],
                         [[0,1],[1,1],[1,0]],
                         [[1,1,0],[0,1,1]],
                         [[0,1],[1,1],[1,0]]
                     ],
-                    [ // J Piece
+                    [ // J Piece (Index 5)
                         [[1,0,0],[1,1,1]],
                         [[1,1],[1,0],[1,0]],
                         [[1,1,1],[0,0,1]],
                         [[0,1],[0,1],[1,1]]
                     ],
-                    [ // L Piece
+                    [ // L Piece (Index 6)
                         [[0,0,1],[1,1,1]],
                         [[1,0],[1,0],[1,1]],
                         [[1,1,1],[1,0,0]],
@@ -334,12 +345,12 @@
                 document.getElementById('btnLeft').onclick = () => this.tryMove(-1, 0);
                 document.getElementById('btnRight').onclick = () => this.tryMove(1, 0);
                 document.getElementById('btnRotate').onclick = () => this.tryRotate();
-                document.getElementById('btnDrop').onclick = () => this.tryMove(0, 1); // Restored to single step drop
+                document.getElementById('btnDrop').onclick = () => this.tryMove(0, 1);
 
                 document.getElementById('btnLeft').ontouchstart = (e) => { e.preventDefault(); this.tryMove(-1, 0); };
                 document.getElementById('btnRight').ontouchstart = (e) => { e.preventDefault(); this.tryMove(1, 0); };
                 document.getElementById('btnRotate').ontouchstart = (e) => { e.preventDefault(); this.tryRotate(); };
-                document.getElementById('btnDrop').ontouchstart = (e) => { e.preventDefault(); this.tryMove(0, 1); }; // Restored to single step drop
+                document.getElementById('btnDrop').ontouchstart = (e) => { e.preventDefault(); this.tryMove(0, 1); };
             }
 
             generateNextPiece() {
@@ -357,25 +368,32 @@
             }
 
             displayNextPiece() {
-                const nextContainer = document.getElementById('nextPiece');
+                const nextContainer = document.getElementById('nextPieceDisplay'); // Use the new display container
                 nextContainer.innerHTML = '';
                 const shape = this.nextPiece.shape;
-                // Adjust position for next piece preview to roughly center it
-                const pieceWidth = shape[0].length;
-                const pieceHeight = shape.length;
-                // Assuming nextPiece container is 100x100 and blocks are 18px with 2px margin
-                const startX = (100 - pieceWidth * 20) / 2; // Center horizontally
-                const startY = (100 - pieceHeight * 20) / 2; // Center vertically
+
+                // Calculate offset to center the piece in the 80x80px display area
+                // Blocks in next piece display are 18px, with 2px border from .block style
+                // So, effective block size for next piece is 20px (18px + 2*1px border)
+                const effectiveBlockSize = 20; 
+                const previewAreaSize = 80; // next-piece-display is 80x80
+
+                const pieceWidthPx = shape[0].length * effectiveBlockSize;
+                const pieceHeightPx = shape.length * effectiveBlockSize;
+
+                const startX = (previewAreaSize - pieceWidthPx) / 2;
+                const startY = (previewAreaSize - pieceHeightPx) / 2;
 
                 for (let row = 0; row < shape.length; row++) {
                     for (let col = 0; col < shape[row].length; col++) {
                         if (shape[row][col]) {
                             const block = document.createElement('div');
                             block.className = `block ${this.nextPiece.color}`;
-                            block.style.left = (col * 20 + startX) + 'px';
-                            block.style.top = (row * 20 + startY) + 'px';
-                            block.style.width = '18px'; // Keep consistent block size
-                            block.style.height = '18px';
+                            // Position blocks relative to the nextPieceDisplay container
+                            block.style.left = (col * effectiveBlockSize + startX) + 'px';
+                            block.style.top = (row * effectiveBlockSize + startY) + 'px';
+                            block.style.width = (effectiveBlockSize - 2) + 'px'; // 18px for content
+                            block.style.height = (effectiveBlockSize - 2) + 'px'; // 18px for content
                             nextContainer.appendChild(block);
                         }
                     }
@@ -409,17 +427,22 @@
                 const shape = piece.shape;
                 for (let row = 0; row < shape.length; row++) {
                     for (let col = 0; col < shape[row].length; col++) {
-                        if (shape[row][col]) {
-                            const x = piece.x + col;
-                            const y = piece.y + row;
+                        if (shape[row][col]) { // If this part of the piece exists
+                            const x = piece.x + col; // Calculate absolute X position on board
+                            const y = piece.y + row; // Calculate absolute Y position on board
 
-                            // Check board boundaries (left, right, bottom)
+                            // 1. Check board boundaries
+                            // Left boundary (x < 0) - This is working based on your feedback
+                            // Right boundary (x >= this.width) - This is the primary focus for right-side overflow
+                            // Bottom boundary (y >= this.height) - This is the primary focus for bottom overflow
                             if (x < 0 || x >= this.width || y >= this.height) {
                                 return false;
                             }
-                            // Check for collision with existing blocks on the board
-                            // Only check if y is non-negative (within visible board)
-                            if (y >= 0 && this.board[y][x]) {
+
+                            // 2. Check for collision with existing blocks on the board
+                            // Important: Only check for collision if y is non-negative (within the visible board area)
+                            // A piece can start with y < 0, but it shouldn't collide with board[y][x] if y is negative.
+                            if (y >= 0 && this.board[y][x] !== 0) { // If there's already a block at this position
                                 return false;
                             }
                         }
@@ -441,32 +464,15 @@
                     this.currentPiece = testPiece;
                     this.render();
                     return true; // Move successful
-                } else if (dy === 1) {
-                    // If moving down (dy=1) failed, it means the piece has landed
+                } else if (dy === 1) { // If moving down (dy=1) failed
+                    // This means the piece has landed (either on another block or the bottom of the board)
                     this.lockPiece();
-                    // Reset interval here to ensure prompt next fall after lock
+                    // Reset the game interval to ensure consistent fall speed after locking
                     clearInterval(this.gameInterval);
                     this.startGameLoop();
                 }
                 return false; // Move failed
             }
-
-            // Optional: Re-add a hard drop function if desired on a separate button
-            // tryHardDrop() {
-            //     if (!this.gameRunning) return;
-            //     let originalY = this.currentPiece.y;
-            //     while (this.tryMove(0, 1)) {
-            //         // Keep moving down until tryMove returns false (piece landed)
-            //     }
-            //     // Score for hard drop
-            //     const dropDistance = this.currentPiece.y - originalY;
-            //     if (dropDistance > 0) {
-            //         this.animateScore("+" + (dropDistance * 2));
-            //         this.score += dropDistance * 2;
-            //         this.updateDisplay();
-            //     }
-            //     // lockPiece is already called by tryMove when it fails to move down
-            // }
 
             tryRotate() {
                 if (!this.gameRunning) return;
@@ -474,23 +480,34 @@
                 const nextRot = (this.currentPiece.rotation + 1) % 4;
                 const rotated = this.pieces[type][nextRot];
                 
-                // Wall kick data for standard SRS (Super Rotation System)
-                // These are common kicks for Super Rotation System (SRS)
-                // Simplified for the purpose of this game.
+                // Simplified Wall Kick Data (Standard SRS-like kicks)
+                // For I piece (index 0)
+                // For O piece (index 1) - no kicks needed, just [0,0]
+                // For other pieces
                 const kickData = [
-                    [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]], // General kicks
-                    [[0, 0], [-2, 0], [1, 0], [-1, 0], [2, 0], [0, -1], [0, 2]] // I-piece specific kicks
+                    // For I-piece (type 0)
+                    [ [0, 0], [-2, 0], [1, 0], [-1, 0], [2, 0], [0, -1], [0, 2] ],
+                    // For O-piece (type 1)
+                    [ [0, 0] ],
+                    // For T, S, Z, J, L pieces (other types)
+                    [ [0, 0], [-1, 0], [1, 0], [0, -1], [0, 1], [-2, 0], [2, 0], [0, -2], [0, 2] ]
                 ];
 
-                // Determine which kick data to use (I-piece is index 0 in this.pieces)
-                const kicks = (type === 0) ? kickData[1] : kickData[0];
+                let kicks;
+                if (type === 0) { // I-piece
+                    kicks = kickData[0];
+                } else if (type === 1) { // O-piece
+                    kicks = kickData[1];
+                } else { // All other pieces
+                    kicks = kickData[2];
+                }
 
                 for (let i = 0; i < kicks.length; i++) {
                     let offset = kicks[i];
                     let testPiece = {
                         ...this.currentPiece,
                         x: this.currentPiece.x + offset[0],
-                        y: this.currentPiece.y + offset[1], // Apply Y offset for kicks (e.g., T-spin)
+                        y: this.currentPiece.y + offset[1],
                         rotation: nextRot,
                         shape: rotated.map(row => row.slice())
                     };
@@ -506,10 +523,12 @@
                 // Transfer the current piece's blocks to the game board
                 for (let row = 0; row < this.currentPiece.shape.length; row++) {
                     for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
-                        if (this.currentPiece.shape[row][col]) {
+                        if (this.currentPiece.shape[row][col]) { // If this is a filled part of the piece
                             const y = this.currentPiece.y + row;
                             const x = this.currentPiece.x + col;
-                            // Only place the block if it's within the board boundaries
+                            // Crucial: Only place the block if its calculated position (x, y)
+                            // is valid within the game board dimensions. This prevents writing
+                            // outside the array or placing blocks that were visually outside.
                             if (y >= 0 && y < this.height && x >= 0 && x < this.width) {
                                 this.board[y][x] = this.currentPiece.color;
                             }
@@ -523,8 +542,7 @@
             checkLines() {
                 const fullLines = [];
                 for (let row = 0; row < this.height; row++) {
-                    // Check if all cells in the row are filled (not 0)
-                    if (this.board[row].every(cell => cell !== 0)) {
+                    if (this.board[row].every(cell => cell !== 0)) { // If all cells in the row are filled
                         fullLines.push(row);
                     }
                 }
@@ -534,7 +552,7 @@
             }
 
             clearLines(fullLines) {
-                // Animate blocks before clearing
+                // Animate blocks before clearing (adds a visual flair)
                 fullLines.forEach(row => {
                     for (let col = 0; col < this.width; col++) {
                         const block = this.getBlockAt(row, col);
@@ -542,36 +560,34 @@
                     }
                 });
 
-                // Actual clearing and board update after animation
+                // Actual clearing and board update after animation completes
                 setTimeout(() => {
                     for (let row of fullLines) {
                         this.board.splice(row, 1); // Remove the full line
                         this.board.unshift(Array(this.width).fill(0)); // Add a new empty line at the top
                     }
-                    // Calculate score based on number of lines cleared and current level
-                    const lineScore = [0, 100, 300, 500, 800][fullLines.length]; // Standard Tetris scoring (100, 300, 500, 800 for 1-4 lines)
+                    // Score logic
+                    const lineScore = [0, 100, 300, 500, 800][fullLines.length];
                     this.animateScore("+" + (lineScore * this.level));
                     this.score += lineScore * this.level;
                     this.lines += fullLines.length;
 
-                    // Level up logic
-                    if (this.lines >= this.level * 10) { // Clear 10 lines to level up
+                    // Level up logic: every 10 lines
+                    if (this.lines >= this.level * 10) {
                         this.level++;
-                        // Decrease fall speed, but not below 100ms
-                        this.fallSpeed = Math.max(100, 1000 - (this.level-1)*80);
-                        // Restart game loop with new speed
-                        clearInterval(this.gameInterval);
-                        this.startGameLoop();
+                        this.fallSpeed = Math.max(100, 1000 - (this.level-1)*80); // Increase speed, minimum 100ms
+                        clearInterval(this.gameInterval); // Clear old interval
+                        this.startGameLoop(); // Start new interval with updated speed
                     }
                     this.updateDisplay();
-                    this.render(); // Re-render the board after clearing lines
-                }, 400); // Match this timeout with the CSS clear-anim duration
+                    this.render(); // Re-render the board to show cleared lines and new empty rows
+                }, 400); // This duration should match the 'blockClear' animation in CSS
             }
 
             getBlockAt(row, col) {
                 // Helper to find a block DOM element at a specific board coordinate
-                const left = (col * 30) + "px";
-                const top = (row * 30) + "px";
+                const left = (col * this.blockSize) + "px";
+                const top = (row * this.blockSize) + "px";
                 return Array.from(this.gameBoard.querySelectorAll('.block')).find(b =>
                     b.style.left === left && b.style.top === top
                 );
@@ -579,28 +595,28 @@
 
             gameLoop() {
                 if (!this.gameRunning) return;
-                // The main game loop simply tries to move the current piece down
-                // If it can't move down, tryMove will automatically call lockPiece()
+                // The main game loop simply tries to move the current piece down by one step.
+                // The tryMove function will handle locking if the move is not valid (i.e., piece landed).
                 this.tryMove(0, 1);
             }
 
             startGameLoop() {
-                if (this.gameInterval) clearInterval(this.gameInterval); // Clear any existing interval
+                if (this.gameInterval) clearInterval(this.gameInterval);
                 this.gameInterval = setInterval(() => this.gameLoop(), this.fallSpeed);
             }
 
             render() {
-                // Clear all existing block elements from the board
+                // Remove all existing block elements from the game board to redraw them
                 Array.from(this.gameBoard.querySelectorAll('.block')).forEach(block => block.remove());
 
-                // Draw existing blocks on the board
+                // Draw all locked blocks currently on the board
                 for (let row = 0; row < this.height; row++) {
                     for (let col = 0; col < this.width; col++) {
-                        if (this.board[row][col]) {
+                        if (this.board[row][col]) { // If there's a block at this position
                             const block = document.createElement('div');
                             block.className = `block ${this.board[row][col]}`;
-                            block.style.left = (col * 30) + 'px';
-                            block.style.top = (row * 30) + 'px';
+                            block.style.left = (col * this.blockSize) + 'px';
+                            block.style.top = (row * this.blockSize) + 'px';
                             this.gameBoard.appendChild(block);
                         }
                     }
@@ -610,17 +626,16 @@
                 if (this.currentPiece) {
                     for (let row = 0; row < this.currentPiece.shape.length; row++) {
                         for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
-                            if (this.currentPiece.shape[row][col]) {
+                            if (this.currentPiece.shape[row][col]) { // If this part of the piece exists
                                 const x = this.currentPiece.x + col;
                                 const y = this.currentPiece.y + row;
-                                // Only render if within visual bounds of the game board
-                                // Blocks above y=0 (i.e., y=-1, y=-2) are part of the piece
-                                // but not visually drawn until they enter the board.
+                                // Only render the block if it's within the *visible* boundaries of the game board.
+                                // Pieces can have blocks at y < 0 when they spawn or are high up.
                                 if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
                                     const block = document.createElement('div');
                                     block.className = `block ${this.currentPiece.color}`;
-                                    block.style.left = (x * 30) + 'px';
-                                    block.style.top = (y * 30) + 'px';
+                                    block.style.left = (x * this.blockSize) + 'px';
+                                    block.style.top = (y * this.blockSize) + 'px';
                                     this.gameBoard.appendChild(block);
                                 }
                             }
@@ -639,16 +654,15 @@
                 const pop = document.getElementById('scorePop');
                 pop.textContent = text;
                 pop.classList.remove('active');
-                // Force reflow to restart animation
-                void pop.offsetWidth; 
+                void pop.offsetWidth; // Trigger reflow to restart CSS animation
                 pop.classList.add('active');
             }
 
             gameOver() {
                 this.gameRunning = false;
-                clearInterval(this.gameInterval); // Stop the game loop
+                clearInterval(this.gameInterval);
                 document.getElementById('finalScore').textContent = this.score;
-                document.getElementById('gameOver').style.display = 'block'; // Show game over screen
+                document.getElementById('gameOver').style.display = 'block';
             }
         }
 
@@ -656,9 +670,10 @@
 
         function startNewGame() {
             document.getElementById('gameOver').style.display = 'none';
-            // It's good practice to clear the board visuals when starting a new game
-            document.getElementById('gameBoard').innerHTML = '<div class="next-piece"><div class="next-label">NEXT</div><div id="nextPiece"></div></div>';
-            game = new TetrisGame(); // Create a brand new game instance
+            // Important: Clear the game board's DOM content to remove all old blocks
+            // This ensures a clean slate for the new game.
+            document.getElementById('gameBoard').innerHTML = '<div class="next-piece"><div class="next-label">NEXT</div><div id="nextPieceDisplay" class="next-piece-display"></div></div>';
+            game = new TetrisGame(); // Create a new game instance
         }
     </script>
 </body>
