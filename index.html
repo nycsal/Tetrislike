@@ -402,6 +402,7 @@
                         if (shape[row][col]) {
                             const x = piece.x + col;
                             const y = piece.y + row;
+                            // Strict: no block outside right or bottom
                             if (x < 0 || x >= this.width || y < 0 || y >= this.height) return false;
                             if (this.board[y][x]) return false;
                         }
