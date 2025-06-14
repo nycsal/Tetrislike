@@ -93,37 +93,20 @@
             background: rgba(0,0,0,0.4);
             backdrop-filter: blur(20px);
             position: relative;
-            overflow: hidden; /* This is crucial for preventing visual overflow */
+            overflow: hidden;
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             touch-action: none;
             margin-top: 10px;
         }
         .block {
             position: absolute;
-            /* Using calc() to ensure pixel precision for width/height considering borders */
-            width: calc(30px - 4px); /* 30px total, 2px border on each side = 4px total border */
-            height: calc(30px - 4px);
+            width: 30px;
+            height: 30px;
             border-radius: 8px;
             border: 2px solid rgba(255,255,255,0.3);
             box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2);
             transition: box-shadow 0.2s, transform 0.2s;
-            box-sizing: content-box; /* Ensure width/height applies to content, borders added on top */
-                                     /* However, your game logic already accounts for this by setting 30px per block */
-                                     /* so this might actually cause an issue. Let's revert this. */
         }
-        /* Revert .block width/height to fixed 30px if game logic handles it as 30px cells */
-        /* The issue might be in the left/top calculation or the isValidPosition */
-        .block {
-            width: 30px;
-            height: 30px;
-            /* If the block's visual size is exactly 30px *including* borders, then
-               the content width should be 30px - 2*border-width. But your game treats
-               each cell as 30px, so the total rendered block should be 30px.
-               Let's ensure the JS handles this. */
-            box-sizing: border-box; /* This means width/height *include* padding and border */
-                                    /* This is usually what you want for layout, but must match JS logic. */
-        }
-
         .block.red { background: linear-gradient(45deg, #ff6b6b, #ee5a52); }
         .block.blue { background: linear-gradient(45deg, #4ecdc4, #44a08d); }
         .block.green { background: linear-gradient(45deg, #95e1d3, #81c784); }
@@ -149,30 +132,14 @@
             border-radius: 10px;
             border: 2px solid rgba(255,255,255,0.2);
             backdrop-filter: blur(10px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
         }
         .next-label {
             color: white;
             text-align: center;
-            padding-bottom: 5px;
+            padding: 5px;
             font-size: 14px;
             font-weight: bold;
         }
-        .next-piece-display {
-            position: relative;
-            width: 80px;
-            height: 80px;
-        }
-        .next-piece-display .block {
-            width: 18px; /* Content width for 20px effective block size (18px + 2px border) */
-            height: 18px; /* Content height for 20px effective block size (18px + 2px border) */
-            border-radius: 5px; /* Slightly smaller border radius for preview blocks */
-            box-sizing: content-box; /* Ensure 18px is content, borders are added */
-        }
-
         .game-over {
             position: absolute;
             top: 50%;
@@ -272,7 +239,7 @@
         <div class="game-board" id="gameBoard">
             <div class="next-piece">
                 <div class="next-label">NEXT</div>
-                <div id="nextPieceDisplay" class="next-piece-display"></div>
+                <div id="nextPiece"></div>
             </div>
         </div>
         <div class="game-over" id="gameOver">
@@ -296,10 +263,8 @@
 
         class TetrisGame {
             constructor() {
-                this.width = 10; // Board width in blocks
-                this.height = 20; // Board height in blocks
-                this.blockSize = 30; // Size of each block in pixels (including its own border)
-                                     // The gameBoard width/height (300px/600px) must be blockSize * dimensions
+                this.width = 10;
+                this.height = 20;
                 this.reset();
                 this.setupButtonControls();
                 this.startGameLoop();
@@ -309,43 +274,43 @@
                 this.board = Array(this.height).fill().map(() => Array(this.width).fill(0));
                 this.colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'cyan'];
                 this.pieces = [
-                    [ // I Piece (Index 0)
+                    [
                         [[1,1,1,1]],
                         [[1],[1],[1],[1]],
                         [[1,1,1,1]],
                         [[1],[1],[1],[1]]
                     ],
-                    [ // O Piece (Index 1)
+                    [
                         [[1,1],[1,1]],
                         [[1,1],[1,1]],
                         [[1,1],[1,1]],
                         [[1,1],[1,1]]
                     ],
-                    [ // T Piece (Index 2)
+                    [
                         [[0,1,0],[1,1,1]],
                         [[1,0],[1,1],[1,0]],
                         [[1,1,1],[0,1,0]],
                         [[0,1],[1,1],[0,1]]
                     ],
-                    [ // S Piece (Index 3)
+                    [
                         [[0,1,1],[1,1,0]],
                         [[1,0],[1,1],[0,1]],
                         [[0,1,1],[1,1,0]],
                         [[1,0],[1,1],[0,1]]
                     ],
-                    [ // Z Piece (Index 4)
+                    [
                         [[1,1,0],[0,1,1]],
                         [[0,1],[1,1],[1,0]],
                         [[1,1,0],[0,1,1]],
                         [[0,1],[1,1],[1,0]]
                     ],
-                    [ // J Piece (Index 5)
+                    [
                         [[1,0,0],[1,1,1]],
                         [[1,1],[1,0],[1,0]],
                         [[1,1,1],[0,0,1]],
                         [[0,1],[0,1],[1,1]]
                     ],
-                    [ // L Piece (Index 6)
+                    [
                         [[0,0,1],[1,1,1]],
                         [[1,0],[1,0],[1,1]],
                         [[1,1,1],[1,0,0]],
@@ -393,27 +358,18 @@
             }
 
             displayNextPiece() {
-                const nextContainer = document.getElementById('nextPieceDisplay');
+                const nextContainer = document.getElementById('nextPiece');
                 nextContainer.innerHTML = '';
                 const shape = this.nextPiece.shape;
-
-                const previewBlockSize = 20; // Each block in preview is 20px (18px content + 2px border)
-                const previewAreaSize = 80;
-
-                const pieceWidthPx = shape[0].length * previewBlockSize;
-                const pieceHeightPx = shape.length * previewBlockSize;
-
-                const startX = (previewAreaSize - pieceWidthPx) / 2;
-                const startY = (previewAreaSize - pieceHeightPx) / 2;
-
                 for (let row = 0; row < shape.length; row++) {
                     for (let col = 0; col < shape[row].length; col++) {
                         if (shape[row][col]) {
                             const block = document.createElement('div');
                             block.className = `block ${this.nextPiece.color}`;
-                            block.style.left = (col * previewBlockSize + startX) + 'px';
-                            block.style.top = (row * previewBlockSize + startY) + 'px';
-                            // CSS handles the actual width/height (18px content + 2px border = 20px total)
+                            block.style.left = (col * 20 + 10) + 'px';
+                            block.style.top = (row * 20 + 30) + 'px';
+                            block.style.width = '18px';
+                            block.style.height = '18px';
                             nextContainer.appendChild(block);
                         }
                     }
@@ -422,16 +378,21 @@
 
             spawnPiece() {
                 let shape = this.nextPiece.shape;
-                let startX = Math.floor((this.width - shape[0].length) / 2);
+                // Clamp startX so piece never spawns out of bounds
+                let minX = 0, maxX = this.width - shape[0].length;
+                let startX = Math.max(minX, Math.min(Math.floor((this.width - shape[0].length) / 2), maxX));
                 this.currentPiece = {
                     type: this.nextPiece.type,
                     rotation: 0,
                     shape: shape.map(row => row.slice()),
                     color: this.nextPiece.color,
                     x: startX,
-                    y: 0 // Starting Y at 0, blocks can visually be above this.
+                    y: 0
                 };
-
+                // Clamp Y if piece is too tall
+                while (!this.isValidPosition(this.currentPiece) && this.currentPiece.y > -4) {
+                    this.currentPiece.y--;
+                }
                 if (!this.isValidPosition(this.currentPiece)) {
                     this.gameOver();
                     return;
@@ -447,20 +408,9 @@
                         if (shape[row][col]) {
                             const x = piece.x + col;
                             const y = piece.y + row;
-
-                            // Check horizontal bounds (left and right)
-                            if (x < 0 || x >= this.width) {
-                                return false;
-                            }
-                            // Check bottom boundary
-                            if (y >= this.height) {
-                                return false;
-                            }
-                            // Check for collision with existing blocks on the board
-                            // Important: Only check collision if y is within the board's vertical range (0 to height-1)
-                            if (y >= 0 && this.board[y][x] !== 0) {
-                                return false;
-                            }
+                            // Strict: no block outside right or bottom
+                            if (x < 0 || x >= this.width || y < 0 || y >= this.height) return false;
+                            if (this.board[y][x]) return false;
                         }
                     }
                 }
@@ -469,22 +419,18 @@
 
             tryMove(dx, dy) {
                 if (!this.gameRunning) return false;
-
                 const testPiece = {
                     ...this.currentPiece,
                     x: this.currentPiece.x + dx,
                     y: this.currentPiece.y + dy
                 };
-
                 if (this.isValidPosition(testPiece)) {
                     this.currentPiece = testPiece;
                     this.render();
                     return true;
-                } else if (dy === 1) { // If moving down failed, the piece has landed
+                } else if (dy === 1) {
+                    // If can't move down, lock piece and spawn new one
                     this.lockPiece();
-                    // Immediately reset the fall interval so the next piece starts falling promptly
-                    clearInterval(this.gameInterval);
-                    this.startGameLoop();
                 }
                 return false;
             }
@@ -494,39 +440,29 @@
                 const type = this.currentPiece.type;
                 const nextRot = (this.currentPiece.rotation + 1) % 4;
                 const rotated = this.pieces[type][nextRot];
-                
-                // SRS Wall Kick Data (simplified)
-                const kickData = [
-                    // For I-piece (type 0)
-                    [ [0, 0], [-2, 0], [1, 0], [-1, 0], [2, 0], [0, -1], [0, 2] ],
-                    // For O-piece (type 1)
-                    [ [0, 0] ],
-                    // For all other pieces
-                    [ [0, 0], [-1, 0], [1, 0], [0, -1], [0, 1], [-2, 0], [2, 0], [0, -2], [0, 2] ]
-                ];
-
-                let kicks;
-                if (type === 0) {
-                    kicks = kickData[0];
-                } else if (type === 1) {
-                    kicks = kickData[1];
-                } else {
-                    kicks = kickData[2];
+                let testPiece = {
+                    ...this.currentPiece,
+                    rotation: nextRot,
+                    shape: rotated.map(row => row.slice())
+                };
+                // Clamp X so piece never goes out of bounds after rotation
+                let minOffset = 0, maxOffset = 0;
+                for (let row = 0; row < rotated.length; row++) {
+                    for (let col = 0; col < rotated[row].length; col++) {
+                        if (rotated[row][col]) {
+                            let x = this.currentPiece.x + col;
+                            if (x < minOffset) minOffset = x;
+                            if (x >= this.width) maxOffset = Math.max(maxOffset, x - (this.width - 1));
+                        }
+                    }
                 }
-
-                for (let i = 0; i < kicks.length; i++) {
-                    let offset = kicks[i];
-                    let testPiece = {
-                        ...this.currentPiece,
-                        x: this.currentPiece.x + offset[0],
-                        y: this.currentPiece.y + offset[1],
-                        rotation: nextRot,
-                        shape: rotated.map(row => row.slice())
-                    };
+                let offsets = [0, -1, 1, -2, 2];
+                for (let offset of offsets) {
+                    testPiece.x = this.currentPiece.x - minOffset - maxOffset + offset;
                     if (this.isValidPosition(testPiece)) {
-                        this.currentPiece = testPiece;
+                        this.currentPiece = {...testPiece};
                         this.render();
-                        return;
+                        break;
                     }
                 }
             }
@@ -537,8 +473,6 @@
                         if (this.currentPiece.shape[row][col]) {
                             const y = this.currentPiece.y + row;
                             const x = this.currentPiece.x + col;
-                            // Ensure we only try to lock blocks that are within the board's logical boundaries.
-                            // Blocks can be at y < 0 when they are still spawning/moving at the top.
                             if (y >= 0 && y < this.height && x >= 0 && x < this.width) {
                                 this.board[y][x] = this.currentPiece.color;
                             }
@@ -589,18 +523,11 @@
             }
 
             getBlockAt(row, col) {
-                const left = (col * this.blockSize) + "px";
-                const top = (row * this.blockSize) + "px";
-                // Iterate through existing blocks on the game board
-                for (const blockEl of this.gameBoard.children) {
-                    // Only consider actual block elements, not the next-piece container
-                    if (blockEl.classList.contains('block') &&
-                        blockEl.style.left === left &&
-                        blockEl.style.top === top) {
-                        return blockEl;
-                    }
-                }
-                return null; // No block found at this position
+                const left = (col * 30) + "px";
+                const top = (row * 30) + "px";
+                return Array.from(this.gameBoard.querySelectorAll('.block')).find(b =>
+                    b.style.left === left && b.style.top === top
+                );
             }
 
             gameLoop() {
@@ -614,42 +541,29 @@
             }
 
             render() {
-                // Remove all existing block elements, except for the 'next-piece' container
-                Array.from(this.gameBoard.querySelectorAll('.block')).forEach(block => {
-                    // Ensure we don't remove blocks from the next piece display
-                    if (!block.closest('#nextPieceDisplay')) {
-                        block.remove();
-                    }
-                });
-                
-                // Draw all locked blocks currently on the board
+                Array.from(this.gameBoard.querySelectorAll('.block')).forEach(block => block.remove());
                 for (let row = 0; row < this.height; row++) {
                     for (let col = 0; col < this.width; col++) {
-                        if (this.board[row][col] !== 0) {
+                        if (this.board[row][col]) {
                             const block = document.createElement('div');
                             block.className = `block ${this.board[row][col]}`;
-                            block.style.left = (col * this.blockSize) + 'px';
-                            block.style.top = (row * this.blockSize) + 'px';
+                            block.style.left = (col * 30) + 'px';
+                            block.style.top = (row * 30) + 'px';
                             this.gameBoard.appendChild(block);
                         }
                     }
                 }
-
-                // Draw the current falling piece
                 if (this.currentPiece) {
                     for (let row = 0; row < this.currentPiece.shape.length; row++) {
                         for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
                             if (this.currentPiece.shape[row][col]) {
                                 const x = this.currentPiece.x + col;
                                 const y = this.currentPiece.y + row;
-                                
-                                // Render only if the block's *logical* position is within the board boundaries.
-                                // If y < 0, it means the block is visually above the board.
                                 if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
                                     const block = document.createElement('div');
                                     block.className = `block ${this.currentPiece.color}`;
-                                    block.style.left = (x * this.blockSize) + 'px';
-                                    block.style.top = (y * this.blockSize) + 'px';
+                                    block.style.left = (x * 30) + 'px';
+                                    block.style.top = (y * 30) + 'px';
                                     this.gameBoard.appendChild(block);
                                 }
                             }
@@ -668,7 +582,7 @@
                 const pop = document.getElementById('scorePop');
                 pop.textContent = text;
                 pop.classList.remove('active');
-                void pop.offsetWidth; // Trigger reflow to restart CSS animation
+                void pop.offsetWidth;
                 pop.classList.add('active');
             }
 
@@ -684,17 +598,7 @@
 
         function startNewGame() {
             document.getElementById('gameOver').style.display = 'none';
-            // Clear all block elements from the main game board area only.
-            // Keep the 'next-piece' container intact.
-            const gameBoard = document.getElementById('gameBoard');
-            Array.from(gameBoard.children).forEach(child => {
-                if (!child.classList.contains('next-piece')) {
-                    child.remove();
-                }
-            });
-            // Ensure the next-piece-display is also cleared within the existing next-piece container
-            document.getElementById('nextPieceDisplay').innerHTML = '';
-
+            document.getElementById('gameBoard').innerHTML = '<div class="next-piece"><div class="next-label">NEXT</div><div id="nextPiece"></div></div>';
             game = new TetrisGame();
         }
     </script>
