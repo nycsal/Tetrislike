@@ -335,12 +335,12 @@
                 document.getElementById('btnLeft').onclick = () => this.tryMove(-1, 0);
                 document.getElementById('btnRight').onclick = () => this.tryMove(1, 0);
                 document.getElementById('btnRotate').onclick = () => this.tryRotate();
-                document.getElementById('btnDrop').onclick = () => this.tryMove(0, 1);
-
+                document.getElementById('btnDrop').onclick = () => this.tryHardDrop(); // Changed to hard drop
+                
                 document.getElementById('btnLeft').ontouchstart = (e) => { e.preventDefault(); this.tryMove(-1, 0); };
                 document.getElementById('btnRight').ontouchstart = (e) => { e.preventDefault(); this.tryMove(1, 0); };
                 document.getElementById('btnRotate').ontouchstart = (e) => { e.preventDefault(); this.tryRotate(); };
-                document.getElementById('btnDrop').ontouchstart = (e) => { e.preventDefault(); this.tryMove(0, 1); };
+                document.getElementById('btnDrop').ontouchstart = (e) => { e.preventDefault(); this.tryHardDrop(); }; // Changed to hard drop
             }
 
             generateNextPiece() {
@@ -378,7 +378,7 @@
 
             spawnPiece() {
                 let shape = this.nextPiece.shape;
-                let startX = Math.max(0, Math.min(Math.floor((this.width - shape[0].length) / 2), this.width - shape[0].length));
+                let startX = Math.floor((this.width - shape[0].length) / 2);
                 this.currentPiece = {
                     type: this.nextPiece.type,
                     rotation: 0,
@@ -387,6 +387,7 @@
                     x: startX,
                     y: 0
                 };
+                // Check if the spawned piece immediately collides, indicating game over
                 if (!this.isValidPosition(this.currentPiece)) {
                     this.gameOver();
                     return;
@@ -402,9 +403,14 @@
                         if (shape[row][col]) {
                             const x = piece.x + col;
                             const y = piece.y + row;
-                            // Strict: no block outside right or bottom
-                            if (x < 0 || x >= this.width || y < 0 || y >= this.height) return false;
-                            if (this.board[y][x]) return false;
+                            // Check for horizontal and vertical boundaries
+                            if (x < 0 || x >= this.width || y >= this.height) {
+                                return false;
+                            }
+                            // Check for collision with existing blocks on the board
+                            if (y >= 0 && this.board[y][x]) {
+                                return false;
+                            }
                         }
                     }
                 }
@@ -423,28 +429,70 @@
                     this.render();
                     return true;
                 } else if (dy === 1) {
-                    // If can't move down, lock piece and spawn new one
+                    // If can't move down, it means the piece has landed
                     this.lockPiece();
                 }
                 return false;
             }
+
+            tryHardDrop() {
+                if (!this.gameRunning) return;
+                let originalY = this.currentPiece.y;
+                while (this.tryMove(0, 1)) {
+                    // Keep moving down until it can't
+                }
+                // Calculate score for hard drop (e.g., 2 points per row dropped)
+                const dropDistance = this.currentPiece.y - originalY;
+                if (dropDistance > 0) {
+                    this.animateScore("+" + (dropDistance * 2));
+                    this.score += dropDistance * 2;
+                    this.updateDisplay();
+                }
+                this.lockPiece(); // Lock the piece immediately after hard drop
+            }
+
 
             tryRotate() {
                 if (!this.gameRunning) return;
                 const type = this.currentPiece.type;
                 const nextRot = (this.currentPiece.rotation + 1) % 4;
                 const rotated = this.pieces[type][nextRot];
-                for (let offset of [0, -1, 1, -2, 2]) {
+                
+                // Wall kick data for standard SRS (Super Rotation System) - simplified for basic shapes
+                const kickData = {
+                    // Standard kicks for most pieces
+                    'default': [
+                        [0, 0], [-1, 0], [1, 0], [0, -1], [0, 1],
+                        [-2, 0], [2, 0], [0, -2], [0, 2]
+                    ],
+                    // Special kick data for 'I' piece (long bar)
+                    'I': [
+                        [0, 0], [-2, 0], [1, 0], [-1, 0], [2, 0],
+                        [0, -1], [0, 2]
+                    ],
+                    // Special kick data for 'O' piece (square) - usually no kicks needed
+                    'O': [
+                        [0, 0]
+                    ]
+                };
+
+                // Determine which kick data to use
+                const kicks = kickData[type === 0 ? 'I' : type === 1 ? 'O' : 'default'];
+
+
+                for (let i = 0; i < kicks.length; i++) {
+                    let offset = kicks[i];
                     let testPiece = {
                         ...this.currentPiece,
-                        x: this.currentPiece.x + offset,
+                        x: this.currentPiece.x + offset[0],
+                        y: this.currentPiece.y + offset[1],
                         rotation: nextRot,
                         shape: rotated.map(row => row.slice())
                     };
                     if (this.isValidPosition(testPiece)) {
                         this.currentPiece = testPiece;
                         this.render();
-                        break;
+                        return; // Successfully rotated and moved
                     }
                 }
             }
@@ -455,6 +503,7 @@
                         if (this.currentPiece.shape[row][col]) {
                             const y = this.currentPiece.y + row;
                             const x = this.currentPiece.x + col;
+                            // Ensure the block is placed within the game board
                             if (y >= 0 && y < this.height && x >= 0 && x < this.width) {
                                 this.board[y][x] = this.currentPiece.color;
                             }
@@ -514,6 +563,7 @@
 
             gameLoop() {
                 if (!this.gameRunning) return;
+                // Only attempt to move down; if it fails, the piece will be locked
                 this.tryMove(0, 1);
             }
 
@@ -541,6 +591,7 @@
                             if (this.currentPiece.shape[row][col]) {
                                 const x = this.currentPiece.x + col;
                                 const y = this.currentPiece.y + row;
+                                // Only render if within bounds to avoid visual overflow
                                 if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
                                     const block = document.createElement('div');
                                     block.className = `block ${this.currentPiece.color}`;
@@ -580,6 +631,7 @@
 
         function startNewGame() {
             document.getElementById('gameOver').style.display = 'none';
+            // Clear existing blocks before creating a new game instance
             document.getElementById('gameBoard').innerHTML = '<div class="next-piece"><div class="next-label">NEXT</div><div id="nextPiece"></div></div>';
             game = new TetrisGame();
         }
