@@ -100,13 +100,30 @@
         }
         .block {
             position: absolute;
-            width: 30px;
-            height: 30px;
+            /* Using calc() to ensure pixel precision for width/height considering borders */
+            width: calc(30px - 4px); /* 30px total, 2px border on each side = 4px total border */
+            height: calc(30px - 4px);
             border-radius: 8px;
             border: 2px solid rgba(255,255,255,0.3);
             box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2);
             transition: box-shadow 0.2s, transform 0.2s;
+            box-sizing: content-box; /* Ensure width/height applies to content, borders added on top */
+                                     /* However, your game logic already accounts for this by setting 30px per block */
+                                     /* so this might actually cause an issue. Let's revert this. */
         }
+        /* Revert .block width/height to fixed 30px if game logic handles it as 30px cells */
+        /* The issue might be in the left/top calculation or the isValidPosition */
+        .block {
+            width: 30px;
+            height: 30px;
+            /* If the block's visual size is exactly 30px *including* borders, then
+               the content width should be 30px - 2*border-width. But your game treats
+               each cell as 30px, so the total rendered block should be 30px.
+               Let's ensure the JS handles this. */
+            box-sizing: border-box; /* This means width/height *include* padding and border */
+                                    /* This is usually what you want for layout, but must match JS logic. */
+        }
+
         .block.red { background: linear-gradient(45deg, #ff6b6b, #ee5a52); }
         .block.blue { background: linear-gradient(45deg, #4ecdc4, #44a08d); }
         .block.green { background: linear-gradient(45deg, #95e1d3, #81c784); }
@@ -132,24 +149,30 @@
             border-radius: 10px;
             border: 2px solid rgba(255,255,255,0.2);
             backdrop-filter: blur(10px);
-            display: flex; /* Use flexbox to center content */
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
         }
         .next-label {
             color: white;
             text-align: center;
-            padding-bottom: 5px; /* Add padding to separate from piece */
+            padding-bottom: 5px;
             font-size: 14px;
             font-weight: bold;
         }
-        .next-piece-display { /* New container for the piece itself */
+        .next-piece-display {
             position: relative;
-            width: 80px; /* Adjust as needed to fit pieces */
-            height: 80px; /* Adjust as needed to fit pieces */
-            /* Removed background, border, etc. as main .next-piece handles it */
+            width: 80px;
+            height: 80px;
         }
+        .next-piece-display .block {
+            width: 18px; /* Content width for 20px effective block size (18px + 2px border) */
+            height: 18px; /* Content height for 20px effective block size (18px + 2px border) */
+            border-radius: 5px; /* Slightly smaller border radius for preview blocks */
+            box-sizing: content-box; /* Ensure 18px is content, borders are added */
+        }
+
         .game-over {
             position: absolute;
             top: 50%;
@@ -249,7 +272,8 @@
         <div class="game-board" id="gameBoard">
             <div class="next-piece">
                 <div class="next-label">NEXT</div>
-                <div id="nextPieceDisplay" class="next-piece-display"></div> </div>
+                <div id="nextPieceDisplay" class="next-piece-display"></div>
+            </div>
         </div>
         <div class="game-over" id="gameOver">
             <h2>Game Over!</h2>
@@ -272,9 +296,10 @@
 
         class TetrisGame {
             constructor() {
-                this.width = 10;
-                this.height = 20;
-                this.blockSize = 30; // Define block size for consistent calculations
+                this.width = 10; // Board width in blocks
+                this.height = 20; // Board height in blocks
+                this.blockSize = 30; // Size of each block in pixels (including its own border)
+                                     // The gameBoard width/height (300px/600px) must be blockSize * dimensions
                 this.reset();
                 this.setupButtonControls();
                 this.startGameLoop();
@@ -368,18 +393,15 @@
             }
 
             displayNextPiece() {
-                const nextContainer = document.getElementById('nextPieceDisplay'); // Use the new display container
+                const nextContainer = document.getElementById('nextPieceDisplay');
                 nextContainer.innerHTML = '';
                 const shape = this.nextPiece.shape;
 
-                // Calculate offset to center the piece in the 80x80px display area
-                // Blocks in next piece display are 18px, with 2px border from .block style
-                // So, effective block size for next piece is 20px (18px + 2*1px border)
-                const effectiveBlockSize = 20; 
-                const previewAreaSize = 80; // next-piece-display is 80x80
+                const previewBlockSize = 20; // Each block in preview is 20px (18px content + 2px border)
+                const previewAreaSize = 80;
 
-                const pieceWidthPx = shape[0].length * effectiveBlockSize;
-                const pieceHeightPx = shape.length * effectiveBlockSize;
+                const pieceWidthPx = shape[0].length * previewBlockSize;
+                const pieceHeightPx = shape.length * previewBlockSize;
 
                 const startX = (previewAreaSize - pieceWidthPx) / 2;
                 const startY = (previewAreaSize - pieceHeightPx) / 2;
@@ -389,11 +411,9 @@
                         if (shape[row][col]) {
                             const block = document.createElement('div');
                             block.className = `block ${this.nextPiece.color}`;
-                            // Position blocks relative to the nextPieceDisplay container
-                            block.style.left = (col * effectiveBlockSize + startX) + 'px';
-                            block.style.top = (row * effectiveBlockSize + startY) + 'px';
-                            block.style.width = (effectiveBlockSize - 2) + 'px'; // 18px for content
-                            block.style.height = (effectiveBlockSize - 2) + 'px'; // 18px for content
+                            block.style.left = (col * previewBlockSize + startX) + 'px';
+                            block.style.top = (row * previewBlockSize + startY) + 'px';
+                            // CSS handles the actual width/height (18px content + 2px border = 20px total)
                             nextContainer.appendChild(block);
                         }
                     }
@@ -402,7 +422,6 @@
 
             spawnPiece() {
                 let shape = this.nextPiece.shape;
-                // Calculate starting X to center the piece horizontally
                 let startX = Math.floor((this.width - shape[0].length) / 2);
                 this.currentPiece = {
                     type: this.nextPiece.type,
@@ -410,16 +429,14 @@
                     shape: shape.map(row => row.slice()),
                     color: this.nextPiece.color,
                     x: startX,
-                    y: 0 // Start at the top of the board
+                    y: 0 // Starting Y at 0, blocks can visually be above this.
                 };
 
-                // Check if the newly spawned piece immediately collides
-                // This means there's no space at the top, hence game over.
                 if (!this.isValidPosition(this.currentPiece)) {
                     this.gameOver();
                     return;
                 }
-                this.generateNextPiece(); // Generate the next piece immediately after spawning
+                this.generateNextPiece();
                 this.render();
             }
 
@@ -427,22 +444,21 @@
                 const shape = piece.shape;
                 for (let row = 0; row < shape.length; row++) {
                     for (let col = 0; col < shape[row].length; col++) {
-                        if (shape[row][col]) { // If this part of the piece exists
-                            const x = piece.x + col; // Calculate absolute X position on board
-                            const y = piece.y + row; // Calculate absolute Y position on board
+                        if (shape[row][col]) {
+                            const x = piece.x + col;
+                            const y = piece.y + row;
 
-                            // 1. Check board boundaries
-                            // Left boundary (x < 0) - This is working based on your feedback
-                            // Right boundary (x >= this.width) - This is the primary focus for right-side overflow
-                            // Bottom boundary (y >= this.height) - This is the primary focus for bottom overflow
-                            if (x < 0 || x >= this.width || y >= this.height) {
+                            // Check horizontal bounds (left and right)
+                            if (x < 0 || x >= this.width) {
                                 return false;
                             }
-
-                            // 2. Check for collision with existing blocks on the board
-                            // Important: Only check for collision if y is non-negative (within the visible board area)
-                            // A piece can start with y < 0, but it shouldn't collide with board[y][x] if y is negative.
-                            if (y >= 0 && this.board[y][x] !== 0) { // If there's already a block at this position
+                            // Check bottom boundary
+                            if (y >= this.height) {
+                                return false;
+                            }
+                            // Check for collision with existing blocks on the board
+                            // Important: Only check collision if y is within the board's vertical range (0 to height-1)
+                            if (y >= 0 && this.board[y][x] !== 0) {
                                 return false;
                             }
                         }
@@ -463,15 +479,14 @@
                 if (this.isValidPosition(testPiece)) {
                     this.currentPiece = testPiece;
                     this.render();
-                    return true; // Move successful
-                } else if (dy === 1) { // If moving down (dy=1) failed
-                    // This means the piece has landed (either on another block or the bottom of the board)
+                    return true;
+                } else if (dy === 1) { // If moving down failed, the piece has landed
                     this.lockPiece();
-                    // Reset the game interval to ensure consistent fall speed after locking
+                    // Immediately reset the fall interval so the next piece starts falling promptly
                     clearInterval(this.gameInterval);
                     this.startGameLoop();
                 }
-                return false; // Move failed
+                return false;
             }
 
             tryRotate() {
@@ -480,25 +495,22 @@
                 const nextRot = (this.currentPiece.rotation + 1) % 4;
                 const rotated = this.pieces[type][nextRot];
                 
-                // Simplified Wall Kick Data (Standard SRS-like kicks)
-                // For I piece (index 0)
-                // For O piece (index 1) - no kicks needed, just [0,0]
-                // For other pieces
+                // SRS Wall Kick Data (simplified)
                 const kickData = [
                     // For I-piece (type 0)
                     [ [0, 0], [-2, 0], [1, 0], [-1, 0], [2, 0], [0, -1], [0, 2] ],
                     // For O-piece (type 1)
                     [ [0, 0] ],
-                    // For T, S, Z, J, L pieces (other types)
+                    // For all other pieces
                     [ [0, 0], [-1, 0], [1, 0], [0, -1], [0, 1], [-2, 0], [2, 0], [0, -2], [0, 2] ]
                 ];
 
                 let kicks;
-                if (type === 0) { // I-piece
+                if (type === 0) {
                     kicks = kickData[0];
-                } else if (type === 1) { // O-piece
+                } else if (type === 1) {
                     kicks = kickData[1];
-                } else { // All other pieces
+                } else {
                     kicks = kickData[2];
                 }
 
@@ -514,35 +526,33 @@
                     if (this.isValidPosition(testPiece)) {
                         this.currentPiece = testPiece;
                         this.render();
-                        return; // Successfully rotated and moved
+                        return;
                     }
                 }
             }
 
             lockPiece() {
-                // Transfer the current piece's blocks to the game board
                 for (let row = 0; row < this.currentPiece.shape.length; row++) {
                     for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
-                        if (this.currentPiece.shape[row][col]) { // If this is a filled part of the piece
+                        if (this.currentPiece.shape[row][col]) {
                             const y = this.currentPiece.y + row;
                             const x = this.currentPiece.x + col;
-                            // Crucial: Only place the block if its calculated position (x, y)
-                            // is valid within the game board dimensions. This prevents writing
-                            // outside the array or placing blocks that were visually outside.
+                            // Ensure we only try to lock blocks that are within the board's logical boundaries.
+                            // Blocks can be at y < 0 when they are still spawning/moving at the top.
                             if (y >= 0 && y < this.height && x >= 0 && x < this.width) {
                                 this.board[y][x] = this.currentPiece.color;
                             }
                         }
                     }
                 }
-                this.checkLines(); // Check for and clear any full lines
-                this.spawnPiece(); // Spawn a new piece
+                this.checkLines();
+                this.spawnPiece();
             }
 
             checkLines() {
                 const fullLines = [];
                 for (let row = 0; row < this.height; row++) {
-                    if (this.board[row].every(cell => cell !== 0)) { // If all cells in the row are filled
+                    if (this.board[row].every(cell => cell !== 0)) {
                         fullLines.push(row);
                     }
                 }
@@ -552,51 +562,49 @@
             }
 
             clearLines(fullLines) {
-                // Animate blocks before clearing (adds a visual flair)
                 fullLines.forEach(row => {
                     for (let col = 0; col < this.width; col++) {
                         const block = this.getBlockAt(row, col);
                         if (block) block.classList.add('clear-anim');
                     }
                 });
-
-                // Actual clearing and board update after animation completes
                 setTimeout(() => {
                     for (let row of fullLines) {
-                        this.board.splice(row, 1); // Remove the full line
-                        this.board.unshift(Array(this.width).fill(0)); // Add a new empty line at the top
+                        this.board.splice(row, 1);
+                        this.board.unshift(Array(this.width).fill(0));
                     }
-                    // Score logic
                     const lineScore = [0, 100, 300, 500, 800][fullLines.length];
                     this.animateScore("+" + (lineScore * this.level));
                     this.score += lineScore * this.level;
                     this.lines += fullLines.length;
-
-                    // Level up logic: every 10 lines
                     if (this.lines >= this.level * 10) {
                         this.level++;
-                        this.fallSpeed = Math.max(100, 1000 - (this.level-1)*80); // Increase speed, minimum 100ms
-                        clearInterval(this.gameInterval); // Clear old interval
-                        this.startGameLoop(); // Start new interval with updated speed
+                        this.fallSpeed = Math.max(100, 1000 - (this.level-1)*80);
+                        clearInterval(this.gameInterval);
+                        this.startGameLoop();
                     }
                     this.updateDisplay();
-                    this.render(); // Re-render the board to show cleared lines and new empty rows
-                }, 400); // This duration should match the 'blockClear' animation in CSS
+                    this.render();
+                }, 400);
             }
 
             getBlockAt(row, col) {
-                // Helper to find a block DOM element at a specific board coordinate
                 const left = (col * this.blockSize) + "px";
                 const top = (row * this.blockSize) + "px";
-                return Array.from(this.gameBoard.querySelectorAll('.block')).find(b =>
-                    b.style.left === left && b.style.top === top
-                );
+                // Iterate through existing blocks on the game board
+                for (const blockEl of this.gameBoard.children) {
+                    // Only consider actual block elements, not the next-piece container
+                    if (blockEl.classList.contains('block') &&
+                        blockEl.style.left === left &&
+                        blockEl.style.top === top) {
+                        return blockEl;
+                    }
+                }
+                return null; // No block found at this position
             }
 
             gameLoop() {
                 if (!this.gameRunning) return;
-                // The main game loop simply tries to move the current piece down by one step.
-                // The tryMove function will handle locking if the move is not valid (i.e., piece landed).
                 this.tryMove(0, 1);
             }
 
@@ -606,13 +614,18 @@
             }
 
             render() {
-                // Remove all existing block elements from the game board to redraw them
-                Array.from(this.gameBoard.querySelectorAll('.block')).forEach(block => block.remove());
-
+                // Remove all existing block elements, except for the 'next-piece' container
+                Array.from(this.gameBoard.querySelectorAll('.block')).forEach(block => {
+                    // Ensure we don't remove blocks from the next piece display
+                    if (!block.closest('#nextPieceDisplay')) {
+                        block.remove();
+                    }
+                });
+                
                 // Draw all locked blocks currently on the board
                 for (let row = 0; row < this.height; row++) {
                     for (let col = 0; col < this.width; col++) {
-                        if (this.board[row][col]) { // If there's a block at this position
+                        if (this.board[row][col] !== 0) {
                             const block = document.createElement('div');
                             block.className = `block ${this.board[row][col]}`;
                             block.style.left = (col * this.blockSize) + 'px';
@@ -626,11 +639,12 @@
                 if (this.currentPiece) {
                     for (let row = 0; row < this.currentPiece.shape.length; row++) {
                         for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
-                            if (this.currentPiece.shape[row][col]) { // If this part of the piece exists
+                            if (this.currentPiece.shape[row][col]) {
                                 const x = this.currentPiece.x + col;
                                 const y = this.currentPiece.y + row;
-                                // Only render the block if it's within the *visible* boundaries of the game board.
-                                // Pieces can have blocks at y < 0 when they spawn or are high up.
+                                
+                                // Render only if the block's *logical* position is within the board boundaries.
+                                // If y < 0, it means the block is visually above the board.
                                 if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
                                     const block = document.createElement('div');
                                     block.className = `block ${this.currentPiece.color}`;
@@ -670,10 +684,18 @@
 
         function startNewGame() {
             document.getElementById('gameOver').style.display = 'none';
-            // Important: Clear the game board's DOM content to remove all old blocks
-            // This ensures a clean slate for the new game.
-            document.getElementById('gameBoard').innerHTML = '<div class="next-piece"><div class="next-label">NEXT</div><div id="nextPieceDisplay" class="next-piece-display"></div></div>';
-            game = new TetrisGame(); // Create a new game instance
+            // Clear all block elements from the main game board area only.
+            // Keep the 'next-piece' container intact.
+            const gameBoard = document.getElementById('gameBoard');
+            Array.from(gameBoard.children).forEach(child => {
+                if (!child.classList.contains('next-piece')) {
+                    child.remove();
+                }
+            });
+            // Ensure the next-piece-display is also cleared within the existing next-piece container
+            document.getElementById('nextPieceDisplay').innerHTML = '';
+
+            game = new TetrisGame();
         }
     </script>
 </body>
