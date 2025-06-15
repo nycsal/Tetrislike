@@ -3,426 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KakaReza - Conveyor Belt Game</title>
+    <title>KakaReza</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            background-color: #f0f8ff;
-            margin: 0;
+            height: 100vh;
             overflow: hidden;
+            user-select: none;
         }
-
         #game-container {
-            width: 90%;
-            max-width: 800px;
-            background-color: #fff;
-            border: 5px solid #333;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            padding: 20px;
-            box-sizing: border-box;
             position: relative;
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            background: #333;
+            border: 5px solid #444;
+            border-radius: 10px;
             overflow: hidden;
         }
-
-        #header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
-        }
-
-        #brand {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #4CAF50;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        #score-board {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #333;
-        }
-
-        #level-info {
-            font-size: 1.2em;
-            margin-top: 10px;
-            color: #555;
-        }
-
-        #conveyor-belt-track {
+        #conveyor {
+            position: absolute;
+            bottom: 0;
             width: 100%;
             height: 100px;
-            background-color: #8B4513; /* SaddleBrown */
-            border-radius: 10px;
-            margin: 20px 0;
-            overflow: hidden;
-            position: relative;
-        }
-
-        #conveyor-belt {
+            background: #555;
             display: flex;
-            height: 100%;
-            position: absolute;
-            left: 0;
-            animation: moveBelt linear infinite;
+            align-items: center;
         }
-
         .object {
-            font-size: 3em;
-            padding: 10px;
+            position: absolute;
+            font-size: 40px;
             cursor: pointer;
             user-select: none;
-            transition: transform 0.1s ease-out;
-            position: relative;
-            z-index: 1; /* Ensure objects are above the belt */
+            transition: transform 0.2s;
         }
-
-        .object.selected {
-            transform: scale(1.2);
-            background-color: rgba(255, 255, 0, 0.3);
-            border-radius: 5px;
+        .object.matched {
+            animation: match 0.5s ease forwards;
         }
-
-        .object.collected {
-            animation: collect 0.5s ease-out forwards;
+        @keyframes match {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); }
+            100% { transform: scale(0); opacity: 0; }
         }
-
-        @keyframes moveBelt {
-            from { transform: translateX(0); }
-            to { transform: translateX(-100%); } /* Will be adjusted by JS */
-        }
-
-        @keyframes collect {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            50% { transform: translateY(-50px) scale(1.5); opacity: 0.8; }
-            100% { transform: translateY(-100px) scale(0); opacity: 0; }
-        }
-
-        #message {
-            font-size: 1.8em;
-            color: #d32f2f;
-            margin-top: 20px;
-            text-align: center;
-            min-height: 50px; /* Reserve space for messages */
-        }
-
-        #instructions {
-            background-color: #e0f7fa;
-            border: 2px solid #00bcd4;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            max-width: 600px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        #instructions h2 {
-            color: #00796b;
-            margin-top: 0;
-        }
-
-        #instructions p {
-            color: #333;
-            line-height: 1.5;
-        }
-
-        #start-button {
-            padding: 15px 30px;
-            font-size: 1.8em;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: background-color 0.3s ease;
-        }
-
-        #start-button:hover {
-            background-color: #45a049;
-        }
-
-        #game-over-screen {
+        #scoreboard {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            top: 10px;
+            left: 10px;
             color: white;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 2em;
-            text-align: center;
-            border-radius: 10px;
+            font-size: 24px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
         }
-
-        #game-over-screen button {
-            padding: 10px 20px;
-            font-size: 1em;
-            background-color: #007bff;
+        #instructions {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        #start-button {
+            background: #28a745;
             color: white;
             border: none;
+            padding: 10px 20px;
+            font-size: 18px;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 10px;
+        }
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        #restart-button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
+        <div id="conveyor"></div>
+        <div id="scoreboard">Level: 1 | Score: 0 | Time: 40s | Objects: 0/30</div>
         <div id="instructions">
-            <h2>Welcome to KakaReza!</h2>
-            <p><strong>Instructions:</strong></p>
-            <ul>
-                <li>Tap three of the same emoji objects on the conveyor belt to score.</li>
-                <li>Each set of three matching objects gives you 100 points.</li>
-                <li>You need to collect 30 objects (10 sets) in 40 seconds to pass each level.</li>
-                <li>The conveyor belt speeds up with each new level!</li>
-                <li>There are 4 challenging levels. Good luck!</li>
-            </ul>
+            <h2>KakaReza</h2>
+            <p>Tap three of the same emoji to score 100 points!</p>
+            <p>Collect 30 objects in 40 seconds to advance.</p>
+            <p>4 levels, belt speeds up each level.</p>
             <button id="start-button">Start Game</button>
         </div>
-
-        <div id="game-elements" style="display: none;">
-            <div id="header">
-                <span id="brand">KakaReza</span>
-                <div id="score-board">
-                    Score: <span id="score">0</span> | Objects Collected: <span id="objects-collected">0</span>
-                </div>
-            </div>
-            <div id="level-info">
-                Level: <span id="level">1</span> | Time Left: <span id="time-left">40</span>s
-            </div>
-            <div id="conveyor-belt-track">
-                <div id="conveyor-belt"></div>
-            </div>
-            <div id="message"></div>
-        </div>
-
-        <div id="game-over-screen">
-            <h2 id="game-over-title"></h2>
-            <p>Final Score: <span id="final-score">0</span></p>
-            <p>Objects Collected: <span id="final-objects-collected">0</span></p>
-            <button id="restart-button">Play Again</button>
+        <div id="game-over">
+            <h2>Game Over</h2>
+            <p id="final-score"></p>
+            <button id="restart-button">Restart</button>
         </div>
     </div>
 
     <script>
-        const conveyorBelt = document.getElementById('conveyor-belt');
-        const scoreDisplay = document.getElementById('score');
-        const objectsCollectedDisplay = document.getElementById('objects-collected');
-        const levelDisplay = document.getElementById('level');
-        const timeLeftDisplay = document.getElementById('time-left');
-        const messageDisplay = document.getElementById('message');
-        const instructionsScreen = document.getElementById('instructions');
-        const gameElements = document.getElementById('game-elements');
+        const conveyor = document.getElementById('conveyor');
+        const scoreboard = document.getElementById('scoreboard');
+        const instructions = document.getElementById('instructions');
         const startButton = document.getElementById('start-button');
-        const gameOverScreen = document.getElementById('game-over-screen');
-        const gameOverTitle = document.getElementById('game-over-title');
-        const finalScoreDisplay = document.getElementById('final-score');
-        const finalObjectsCollectedDisplay = document.getElementById('final-objects-collected');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScore = document.getElementById('final-score');
         const restartButton = document.getElementById('restart-button');
 
-        const emojis = ['🍎', '🍌', '🍇', '🍓', '🍒', '🍊', '🍍', '🥝', '🍋', '🍐'];
-        let score = 0;
-        let objectsCollected = 0;
+        const emojis = ['🍎', '🍌', '🍒', '🍇', '🍊'];
         let level = 1;
+        let score = 0;
         let timeLeft = 40;
+        let objectsCollected = 0;
+        let beltSpeed = 2;
+        let gameActive = false;
+        let objects = [];
         let selectedObjects = [];
-        let beltSpeed = 20; // pixels per second (initial speed)
-        let animationFrameId;
-        let gameInterval;
-        let gameTimer;
-        const objectsPerLevel = 30; // 10 sets * 3 objects/set
-        const levels = 4;
-        const levelDuration = 40; // seconds
-
-        // --- Game Initialization and Start ---
-
-        startButton.addEventListener('click', () => {
-            instructionsScreen.style.display = 'none';
-            gameElements.style.display = 'block';
-            startGame();
-        });
-
-        restartButton.addEventListener('click', () => {
-            gameOverScreen.style.display = 'none';
-            resetGame();
-            startGame();
-        });
+        let levelSpeeds = [2, 3, 4, 5];
 
         function startGame() {
-            score = 0;
+            instructions.style.display = 'none';
+            gameActive = true;
+            timeLeft = 40;
             objectsCollected = 0;
             level = 1;
-            timeLeft = levelDuration;
-            selectedObjects = [];
-            updateDisplay();
-            startLevel();
+            score = 0;
+            beltSpeed = levelSpeeds[0];
+            updateScoreboard();
+            spawnObjects();
+            updateTimer();
         }
 
-        function resetGame() {
-            conveyorBelt.innerHTML = ''; // Clear existing objects
-            selectedObjects = [];
-            clearTimeout(gameTimer);
-            clearInterval(gameInterval);
-            cancelAnimationFrame(animationFrameId);
-        }
-
-        function startLevel() {
-            beltSpeed = 20 + (level - 1) * 10; // Increase speed by 10 for each level
-            conveyorBelt.innerHTML = ''; // Clear previous level's objects
-            selectedObjects = [];
-            messageDisplay.textContent = '';
-            timeLeft = levelDuration;
-            updateDisplay();
-
-            // Reset animation
-            conveyorBelt.style.animation = 'none';
-            conveyorBelt.offsetWidth; // Trigger reflow
-            conveyorBelt.style.animation = `moveBelt ${calculateAnimationDuration()}s linear infinite`;
-
-            // Start dropping objects
-            clearInterval(gameInterval);
-            gameInterval = setInterval(dropObject, 1000 / (beltSpeed / 5)); // Adjust interval based on speed
-
-            // Start level timer
-            clearTimeout(gameTimer);
-            gameTimer = setTimeout(endLevel, levelDuration * 1000);
-
-            // Start time left countdown
-            clearInterval(timeCountdown);
-            timeCountdown = setInterval(() => {
-                timeLeft--;
-                timeLeftDisplay.textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    clearInterval(timeCountdown);
-                }
-            }, 1000);
-        }
-
-        function calculateAnimationDuration() {
-            // The animation duration should be inversely proportional to the speed
-            // This ensures objects move at the desired speed across the "visible" belt
-            const beltWidth = conveyorBelt.parentElement.offsetWidth; // Width of the track
-            return beltWidth / beltSpeed; // seconds
-        }
-
-        function dropObject() {
-            if (conveyorBelt.children.length > 50) { // Limit number of objects on screen
-                return;
-            }
+        function spawnObjects() {
+            if (!gameActive) return;
             const object = document.createElement('div');
-            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-            object.textContent = randomEmoji;
             object.classList.add('object');
-            object.dataset.emoji = randomEmoji;
-            object.addEventListener('click', () => selectObject(object));
-            conveyorBelt.appendChild(object);
+            object.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            object.style.left = '-50px';
+            object.style.top = `${Math.random() * (conveyor.offsetHeight - 50)}px`;
+            conveyor.appendChild(object);
+            objects.push(object);
 
-            // Adjust the actual animation speed of the belt's content to ensure consistent flow
-            const currentBeltWidth = conveyorBelt.scrollWidth;
-            conveyorBelt.style.width = `${currentBeltWidth + 70}px`; // Add space for new object
-            conveyorBelt.style.animationDuration = `${(currentBeltWidth + 70) / beltSpeed}s`;
+            object.addEventListener('click', () => handleObjectClick(object));
+
+            setTimeout(spawnObjects, 1000 / (level * 0.5));
         }
 
-        function selectObject(object) {
-            if (object.classList.contains('collected')) return; // Prevent collecting already collected objects
+        function moveObjects() {
+            if (!gameActive) return;
+            objects.forEach((obj, index) => {
+                let left = parseFloat(obj.style.left) || 0;
+                left += beltSpeed;
+                obj.style.left = `${left}px`;
 
-            object.classList.toggle('selected');
-            const index = selectedObjects.indexOf(object);
-
-            if (index > -1) {
-                selectedObjects.splice(index, 1);
-            } else {
-                selectedObjects.push(object);
-                if (selectedObjects.length === 3) {
-                    checkMatch();
+                if (left > conveyor.offsetWidth) {
+                    obj.remove();
+                    objects.splice(index, 1);
                 }
-            }
+            });
+            requestAnimationFrame(moveObjects);
         }
 
-        function checkMatch() {
-            if (selectedObjects.length === 3) {
-                const firstEmoji = selectedObjects[0].dataset.emoji;
-                const allMatch = selectedObjects.every(obj => obj.dataset.emoji === firstEmoji);
+        function handleObjectClick(obj) {
+            if (!gameActive || selectedObjects.includes(obj)) return;
+            selectedObjects.push(obj);
+            obj.style.transform = 'scale(1.2)';
 
-                if (allMatch) {
+            if (selectedObjects.length === 3) {
+                if (selectedObjects.every(o => o.textContent === selectedObjects[0].textContent)) {
                     score += 100;
                     objectsCollected += 3;
-                    messageDisplay.textContent = 'Awesome! +100 Points!';
-                    messageDisplay.style.color = '#4CAF50';
-                    selectedObjects.forEach(obj => {
-                        obj.classList.add('collected');
-                        obj.classList.remove('selected');
-                        setTimeout(() => obj.remove(), 500); // Remove after animation
+                    selectedObjects.forEach(o => {
+                        o.classList.add('matched');
+                        setTimeout(() => {
+                            o.remove();
+                            objects = objects.filter(item => item !== o);
+                        }, 500);
                     });
-                    // Immediately generate more objects to compensate for removed ones
-                    for (let i = 0; i < 3; i++) {
-                        dropObject();
+                    if (objectsCollected >= 30) {
+                        nextLevel();
                     }
                 } else {
-                    messageDisplay.textContent = 'Oops! Not a match. Try again!';
-                    messageDisplay.style.color = '#d32f2f';
-                    selectedObjects.forEach(obj => obj.classList.remove('selected'));
+                    selectedObjects.forEach(o => {
+                        o.style.transform = 'scale(1)';
+                    });
                 }
                 selectedObjects = [];
-                updateDisplay();
             }
+            updateScoreboard();
         }
 
-        function updateDisplay() {
-            scoreDisplay.textContent = score;
-            objectsCollectedDisplay.textContent = objectsCollected;
-            levelDisplay.textContent = level;
-            timeLeftDisplay.textContent = timeLeft;
-        }
-
-        function endLevel() {
-            clearInterval(gameInterval);
-            clearInterval(timeCountdown);
-            cancelAnimationFrame(animationFrameId);
-
-            if (objectsCollected >= objectsPerLevel) {
-                if (level < levels) {
-                    level++;
-                    messageDisplay.textContent = `Level ${level - 1} Complete! Moving to Level ${level}!`;
-                    messageDisplay.style.color = '#007bff';
-                    setTimeout(startLevel, 2000); // Give player time to read message
-                } else {
-                    showGameOverScreen(true); // Player won the game
-                }
+        function nextLevel() {
+            if (level < 4) {
+                level++;
+                beltSpeed = levelSpeeds[level - 1];
+                timeLeft = 40;
+                objectsCollected = 0;
+                objects.forEach(o => o.remove());
+                objects = [];
+                updateScoreboard();
             } else {
-                showGameOverScreen(false); // Player failed to meet object goal
+                endGame();
             }
         }
 
-        function showGameOverScreen(win) {
-            gameOverScreen.style.display = 'flex';
-            if (win) {
-                gameOverTitle.textContent = 'Congratulations! You Won!';
-                gameOverTitle.style.color = '#4CAF50';
+        function updateTimer() {
+            if (!gameActive) return;
+            timeLeft -= 1;
+            updateScoreboard();
+            if (timeLeft <= 0 && objectsCollected < 30) {
+                endGame();
             } else {
-                gameOverTitle.textContent = 'Game Over!';
-                gameOverTitle.style.color = '#d32f2f';
+                setTimeout(updateTimer, 1000);
             }
-            finalScoreDisplay.textContent = score;
-            finalObjectsCollectedDisplay.textContent = objectsCollected;
         }
 
+        function updateScoreboard() {
+            scoreboard.textContent = `Level: ${level} | Score: ${score} | Time: ${timeLeft}s | Objects: ${objectsCollected}/30`;
+        }
+
+        function endGame() {
+            gameActive = false;
+            gameOverScreen.style.display = 'block';
+            finalScore.textContent = `Final Score: ${score}`;
+            objects.forEach(o => o.remove());
+            objects = [];
+        }
+
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', () => {
+            gameOverScreen.style.display = 'none';
+            instructions.style.display = 'block';
+        });
+
+        instructions.style.display = 'block';
+        requestAnimationFrame(moveObjects);
     </script>
 </body>
 </html>
