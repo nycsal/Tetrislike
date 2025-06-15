@@ -1,267 +1,389 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KakaReza</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f0f0f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
-        }
-        #game-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            height: 400px;
-            background: #333;
-            border: 5px solid #444;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        #conveyor {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 100px;
-            background: #555;
-            display: flex;
-            align-items: center;
-        }
-        .object {
-            position: absolute;
-            font-size: 40px;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.2s;
-        }
-        .object.matched {
-            animation: match 0.5s ease forwards;
-        }
-        @keyframes match {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.5); }
-            100% { transform: scale(0); opacity: 0; }
-        }
-        #scoreboard {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            font-size: 24px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        #instructions {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            display: none;
-        }
-        #start-button {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 18px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        #game-over {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            display: none;
-        }
-        #restart-button {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 18px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>KakaReza Conveyor Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #f7f7f7;
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      user-select: none;
+      overflow-x: hidden;
+    }
+    h1 {
+      margin-top: 20px;
+      color: #ff6f00;
+      font-size: 2.2em;
+      letter-spacing: 2px;
+    }
+    #gameArea {
+      position: relative;
+      width: 95vw;
+      max-width: 430px;
+      height: 200px;
+      background: #fffbe7;
+      border: 3px solid #ffb300;
+      border-radius: 18px;
+      margin: 18px 0;
+      overflow: hidden;
+      box-shadow: 0 4px 16px #ffc10744;
+    }
+    .belt {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: repeating-linear-gradient(
+        135deg,
+        #ffe082,
+        #ffe082 12px,
+        #ffd54f 12px,
+        #ffd54f 24px
+      );
+      border-top: 2px solid #ffb300;
+      z-index: 1;
+    }
+    .object {
+      position: absolute;
+      bottom: 68px;
+      font-size: 2.2em;
+      cursor: pointer;
+      transition: transform 0.2s;
+      z-index: 2;
+      filter: drop-shadow(0 2px 2px #ffecb3);
+    }
+    .object.collected {
+      animation: pop 0.5s cubic-bezier(.5,2,.5,1) forwards;
+    }
+    @keyframes pop {
+      0% { transform: scale(1);}
+      70% { transform: scale(1.6) rotate(-12deg);}
+      100% { transform: scale(0) rotate(16deg);}
+    }
+    #scoreboard {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 95vw;
+      max-width: 430px;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+      background: #fffde7;
+      border-radius: 10px;
+      padding: 8px 16px;
+      box-shadow: 0 2px 8px #ffe08255;
+    }
+    #scoreboard span {
+      margin: 0 8px;
+    }
+    #instructions {
+      background: #fff8e1;
+      border: 2px solid #ffd54f;
+      border-radius: 12px;
+      padding: 18px 14px;
+      margin: 18px 0 10px 0;
+      max-width: 430px;
+      font-size: 1.08em;
+      color: #444;
+      text-align: center;
+      box-shadow: 0 2px 8px #ffe08255;
+    }
+    #startBtn, #nextLevelBtn, #restartBtn {
+      background: #ffb300;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 26px;
+      font-size: 1.1em;
+      font-weight: bold;
+      margin: 14px 0;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #ffd54f88;
+      transition: background .2s;
+    }
+    #startBtn:hover, #nextLevelBtn:hover, #restartBtn:hover {
+      background: #ff6f00;
+    }
+    #levelUpAnim {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%,-50%);
+      font-size: 2.5em;
+      color: #ffb300;
+      background: #fffde7;
+      border-radius: 18px;
+      padding: 22px 32px;
+      z-index: 10;
+      box-shadow: 0 4px 16px #ffc10744;
+      display: none;
+      text-align: center;
+      animation: fadeInScale 0.5s;
+    }
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(0.5) translate(-50%,-50%);}
+      to   { opacity: 1; transform: scale(1) translate(-50%,-50%);}
+    }
+    #timerBar {
+      width: 100%;
+      height: 8px;
+      background: #ffe082;
+      border-radius: 8px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    #timerFill {
+      height: 100%;
+      background: linear-gradient(90deg,#ffb300,#ffd54f);
+      width: 100%;
+      transition: width 0.3s;
+    }
+  </style>
 </head>
 <body>
-    <div id="game-container">
-        <div id="conveyor"></div>
-        <div id="scoreboard">Level: 1 | Score: 0 | Time: 40s | Objects: 0/30</div>
-        <div id="instructions">
-            <h2>KakaReza</h2>
-            <p>Tap three of the same emoji to score 100 points!</p>
-            <p>Collect 30 objects in 40 seconds to advance.</p>
-            <p>4 levels, belt speeds up each level.</p>
-            <button id="start-button">Start Game</button>
-        </div>
-        <div id="game-over">
-            <h2>Game Over</h2>
-            <p id="final-score"></p>
-            <button id="restart-button">Restart</button>
-        </div>
-    </div>
+  <h1>KakaReza</h1>
+  <div id="instructions">
+    <b>How to Play:</b><br>
+    Tap <b>three</b> of the same emoji object on the conveyor belt to collect a set.<br>
+    Each set scores <b>100 points</b>.<br>
+    Collect <b>30 objects</b> in <b>40 seconds</b> to pass each level.<br>
+    The belt gets faster each level!<br>
+    <br>
+    <button id="startBtn">Start Game</button>
+  </div>
+  <div id="scoreboard" style="display:none;">
+    <span>Level: <b id="level">1</b></span>
+    <span>Score: <b id="score">0</b></span>
+    <span>Collected: <b id="collected">0</b>/30</span>
+    <span id="timer">40s</span>
+  </div>
+  <div id="gameArea">
+    <div class="belt"></div>
+    <div id="levelUpAnim"></div>
+  </div>
+  <div id="timerBar" style="display:none;">
+    <div id="timerFill"></div>
+  </div>
+  <button id="nextLevelBtn" style="display:none;">Next Level</button>
+  <button id="restartBtn" style="display:none;">Restart</button>
 
-    <script>
-        const conveyor = document.getElementById('conveyor');
-        const scoreboard = document.getElementById('scoreboard');
-        const instructions = document.getElementById('instructions');
-        const startButton = document.getElementById('start-button');
-        const gameOverScreen = document.getElementById('game-over');
-        const finalScore = document.getElementById('final-score');
-        const restartButton = document.getElementById('restart-button');
+  <script>
+    // --- Game Emoji Objects ---
+    const EMOJIS = ["🍎","🍌","🍇","🍩","🍔","🍕","🍪","🥕"];
+    // --- Game Variables ---
+    let level = 1, score = 0, collected = 0, timer = 40, intervalId, spawnId, speed, objects = [];
+    let tapBuffer = {}, tapOrder = [], gameActive = false, levelStartTime = 0, levelTimerId;
+    const LEVELS = 4, LEVEL_TIME = 40, TARGET_COLLECT = 30;
+    const BELT_HEIGHT = 60, OBJ_SIZE = 48;
+    const SPEEDS = [1.8, 2.3, 3.2, 4.4]; // px/ms, increases per level
 
-        const emojis = ['🍎', '🍌', '🍒', '🍇', '🍊'];
-        let level = 1;
-        let score = 0;
-        let timeLeft = 40;
-        let objectsCollected = 0;
-        let beltSpeed = 2;
-        let gameActive = false;
-        let objects = [];
-        let selectedObjects = [];
-        let levelSpeeds = [2, 3, 4, 5];
+    // --- DOM Elements ---
+    const gameArea = document.getElementById('gameArea');
+    const scoreboard = document.getElementById('scoreboard');
+    const levelSpan = document.getElementById('level');
+    const scoreSpan = document.getElementById('score');
+    const collectedSpan = document.getElementById('collected');
+    const timerSpan = document.getElementById('timer');
+    const instructions = document.getElementById('instructions');
+    const startBtn = document.getElementById('startBtn');
+    const nextLevelBtn = document.getElementById('nextLevelBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const levelUpAnim = document.getElementById('levelUpAnim');
+    const timerBar = document.getElementById('timerBar');
+    const timerFill = document.getElementById('timerFill');
 
-        function startGame() {
-            instructions.style.display = 'none';
-            gameActive = true;
-            timeLeft = 40;
-            objectsCollected = 0;
-            level = 1;
-            score = 0;
-            beltSpeed = levelSpeeds[0];
-            updateScoreboard();
-            spawnObjects();
-            updateTimer();
+    // --- Utility Functions ---
+    function randEmoji() {
+      return EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+    }
+    function randY() {
+      // Keep objects above belt
+      return 30 + Math.random() * (gameArea.clientHeight - BELT_HEIGHT - OBJ_SIZE - 30);
+    }
+    function resetTapBuffer() {
+      tapBuffer = {};
+      tapOrder = [];
+    }
+    function showLevelUp(text) {
+      levelUpAnim.textContent = text;
+      levelUpAnim.style.display = 'block';
+      setTimeout(() => { levelUpAnim.style.display = 'none'; }, 1400);
+    }
+    function updateScoreboard() {
+      levelSpan.textContent = level;
+      scoreSpan.textContent = score;
+      collectedSpan.textContent = collected;
+      timerSpan.textContent = timer + 's';
+    }
+    function updateTimerBar() {
+      let elapsed = (Date.now() - levelStartTime) / 1000;
+      let percent = Math.max(0, 1 - elapsed / LEVEL_TIME);
+      timerFill.style.width = (percent * 100) + "%";
+    }
+
+    // --- Game Logic ---
+    function startGame() {
+      level = 1; score = 0; collected = 0;
+      instructions.style.display = 'none';
+      scoreboard.style.display = '';
+      timerBar.style.display = '';
+      restartBtn.style.display = 'none';
+      nextLevelBtn.style.display = 'none';
+      startLevel();
+    }
+    function startLevel() {
+      resetTapBuffer();
+      objects.forEach(obj => obj.el.remove());
+      objects = [];
+      collected = 0;
+      timer = LEVEL_TIME;
+      updateScoreboard();
+      updateTimerBar();
+      levelStartTime = Date.now();
+      gameActive = true;
+      speed = SPEEDS[level-1];
+      spawnObjects();
+      intervalId = setInterval(gameLoop, 16);
+      spawnId = setInterval(spawnObject, 850 - (level-1)*120);
+      levelTimerId = setInterval(() => {
+        timer = Math.max(0, LEVEL_TIME - Math.floor((Date.now()-levelStartTime)/1000));
+        timerSpan.textContent = timer + 's';
+        updateTimerBar();
+        if (timer <= 0) endLevel();
+      }, 200);
+    }
+    function endLevel() {
+      gameActive = false;
+      clearInterval(intervalId);
+      clearInterval(spawnId);
+      clearInterval(levelTimerId);
+      objects.forEach(obj => obj.el.remove());
+      objects = [];
+      if (collected >= TARGET_COLLECT) {
+        if (level < LEVELS) {
+          showLevelUp("Level " + level + " Complete!");
+          nextLevelBtn.style.display = '';
+        } else {
+          showLevelUp("🎉 All Levels Complete! 🎉");
+          restartBtn.style.display = '';
         }
+      } else {
+        showLevelUp("Level Failed!");
+        restartBtn.style.display = '';
+      }
+    }
+    function nextLevel() {
+      level++;
+      nextLevelBtn.style.display = 'none';
+      startLevel();
+    }
+    function restartGame() {
+      level = 1;
+      score = 0;
+      restartBtn.style.display = 'none';
+      startGame();
+    }
 
-        function spawnObjects() {
-            if (!gameActive) return;
-            const object = document.createElement('div');
-            object.classList.add('object');
-            object.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-            object.style.left = '-50px';
-            object.style.top = `${Math.random() * (conveyor.offsetHeight - 50)}px`;
-            conveyor.appendChild(object);
-            objects.push(object);
-
-            object.addEventListener('click', () => handleObjectClick(object));
-
-            setTimeout(spawnObjects, 1000 / (level * 0.5));
+    // --- Conveyor & Objects ---
+    function spawnObjects() {
+      // Spawn initial objects to fill belt
+      for (let i=0; i<5; i++) {
+        spawnObject(-i*80);
+      }
+    }
+    function spawnObject(offsetX=0) {
+      if (!gameActive) return;
+      let emoji = randEmoji();
+      let y = randY();
+      let el = document.createElement('div');
+      el.className = 'object';
+      el.style.left = (offsetX || -OBJ_SIZE) + 'px';
+      el.style.top = y + 'px';
+      el.textContent = emoji;
+      el.addEventListener('touchstart', (e)=>onObjectTap(e,emoji,el));
+      el.addEventListener('click', (e)=>onObjectTap(e,emoji,el));
+      gameArea.appendChild(el);
+      objects.push({el, emoji, x: offsetX || -OBJ_SIZE, y, collected: false});
+    }
+    function gameLoop() {
+      // Move objects
+      let removeList = [];
+      objects.forEach(obj => {
+        obj.x += speed;
+        obj.el.style.left = obj.x + 'px';
+        if (obj.x > gameArea.clientWidth) {
+          removeList.push(obj);
         }
+      });
+      // Remove offscreen
+      removeList.forEach(obj => {
+        obj.el.remove();
+        objects.splice(objects.indexOf(obj),1);
+      });
+    }
 
-        function moveObjects() {
-            if (!gameActive) return;
-            objects.forEach((obj, index) => {
-                let left = parseFloat(obj.style.left) || 0;
-                left += beltSpeed;
-                obj.style.left = `${left}px`;
+    // --- Tap/Collect Logic ---
+    function onObjectTap(e, emoji, el) {
+      if (!gameActive) return;
+      let obj = objects.find(o => o.el===el && !o.collected);
+      if (!obj) return;
+      // Mark as selected
+      el.style.transform = 'scale(1.22)';
+      setTimeout(()=>{el.style.transform='';},120);
 
-                if (left > conveyor.offsetWidth) {
-                    obj.remove();
-                    objects.splice(index, 1);
-                }
-            });
-            requestAnimationFrame(moveObjects);
-        }
-
-        function handleObjectClick(obj) {
-            if (!gameActive || selectedObjects.includes(obj)) return;
-            selectedObjects.push(obj);
-            obj.style.transform = 'scale(1.2)';
-
-            if (selectedObjects.length === 3) {
-                if (selectedObjects.every(o => o.textContent === selectedObjects[0].textContent)) {
-                    score += 100;
-                    objectsCollected += 3;
-                    selectedObjects.forEach(o => {
-                        o.classList.add('matched');
-                        setTimeout(() => {
-                            o.remove();
-                            objects = objects.filter(item => item !== o);
-                        }, 500);
-                    });
-                    if (objectsCollected >= 30) {
-                        nextLevel();
-                    }
-                } else {
-                    selectedObjects.forEach(o => {
-                        o.style.transform = 'scale(1)';
-                    });
-                }
-                selectedObjects = [];
-            }
-            updateScoreboard();
-        }
-
-        function nextLevel() {
-            if (level < 4) {
-                level++;
-                beltSpeed = levelSpeeds[level - 1];
-                timeLeft = 40;
-                objectsCollected = 0;
-                objects.forEach(o => o.remove());
-                objects = [];
-                updateScoreboard();
-            } else {
-                endGame();
-            }
-        }
-
-        function updateTimer() {
-            if (!gameActive) return;
-            timeLeft -= 1;
-            updateScoreboard();
-            if (timeLeft <= 0 && objectsCollected < 30) {
-                endGame();
-            } else {
-                setTimeout(updateTimer, 1000);
-            }
-        }
-
-        function updateScoreboard() {
-            scoreboard.textContent = `Level: ${level} | Score: ${score} | Time: ${timeLeft}s | Objects: ${objectsCollected}/30`;
-        }
-
-        function endGame() {
-            gameActive = false;
-            gameOverScreen.style.display = 'block';
-            finalScore.textContent = `Final Score: ${score}`;
-            objects.forEach(o => o.remove());
-            objects = [];
-        }
-
-        startButton.addEventListener('click', startGame);
-        restartButton.addEventListener('click', () => {
-            gameOverScreen.style.display = 'none';
-            instructions.style.display = 'block';
+      // Add to tap buffer
+      tapBuffer[emoji] = (tapBuffer[emoji]||0)+1;
+      tapOrder.push(obj);
+      if (tapBuffer[emoji] === 3) {
+        // Collect set!
+        let setObjs = tapOrder.filter(o=>o.emoji===emoji).slice(0,3);
+        setObjs.forEach(o=>{
+          o.collected = true;
+          o.el.classList.add('collected');
+          setTimeout(()=>{ o.el.remove(); }, 400);
+          objects.splice(objects.indexOf(o),1);
         });
+        score += 100;
+        collected += 3;
+        showCollectAnim(emoji);
+        resetTapBuffer();
+        updateScoreboard();
+        if (collected >= TARGET_COLLECT) {
+          setTimeout(endLevel, 700);
+        }
+      } else if (tapOrder.length > 6) {
+        // Prevent buffer overflow
+        tapOrder.shift();
+      }
+    }
+    function showCollectAnim(emoji) {
+      levelUpAnim.textContent = "🎉 +3! " + emoji;
+      levelUpAnim.style.display = 'block';
+      setTimeout(() => { levelUpAnim.style.display = 'none'; }, 700);
+    }
 
-        instructions.style.display = 'block';
-        requestAnimationFrame(moveObjects);
-    </script>
+    // --- Event Listeners ---
+    startBtn.onclick = startGame;
+    nextLevelBtn.onclick = nextLevel;
+    restartBtn.onclick = restartGame;
+
+    // --- Responsive ---
+    window.addEventListener('resize', ()=>{
+      // Keep objects in bound if screen resizes
+      objects.forEach(obj=>{
+        if (obj.x > gameArea.clientWidth) {
+          obj.el.remove();
+        }
+      });
+      objects = objects.filter(obj=>obj.x <= gameArea.clientWidth);
+    });
+  </script>
 </body>
 </html>
