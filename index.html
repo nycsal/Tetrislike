@@ -1,590 +1,428 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>KakaReza</title>
-  <meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      touch-action: none;
-      background: #181a22;
-    }
-    body {
-      font-family: 'Arial', sans-serif;
-      height: 100vh;
-      width: 100vw;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .game-header {
-      color: #fff;
-      text-align: center;
-      padding: 18px 10px 10px 10px;
-      background: rgba(0,0,0,0.3);
-      font-family: 'Arial Black', Arial, sans-serif;
-      font-size: 1.3em;
-      letter-spacing: 2px;
-      text-shadow: 2px 2px 8px #000;
-      width: 100vw;
-      box-sizing: border-box;
-      z-index: 10;
-      position: relative;
-    }
-    .game-header .brand {
-      font-size: 1.2em;
-      font-weight: bold;
-      color: #ffd93d;
-      letter-spacing: 1.5px;
-      margin-bottom: 3px;
-      display: block;
-      text-shadow: 0 2px 8px #764ba2;
-    }
-    .scoreboard {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 30px;
-      margin-top: 5px;
-    }
-    .score-label {
-      font-size: 20px;
-      font-weight: bold;
-      position: relative;
-    }
-    .score-pop {
-      position: absolute;
-      left: 50%;
-      top: -25px;
-      transform: translateX(-50%);
-      color: #ffd93d;
-      font-size: 1.1em;
-      font-weight: bold;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s, top 0.3s;
-    }
-    .score-pop.active {
-      opacity: 1;
-      top: -40px;
-      animation: popscore 0.7s cubic-bezier(.1,.7,.7,1.5);
-    }
-    @keyframes popscore {
-      0% { opacity: 0; top: -25px; }
-      30% { opacity: 1; top: -40px; }
-      90% { opacity: 1; top: -40px; }
-      100% { opacity: 0; top: -60px; }
-    }
-    .game-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100vw;
-    }
-    .game-board {
-      width: 300px;
-      height: 600px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-radius: 15px;
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(20px);
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-      touch-action: none;
-      margin-top: 10px;
-    }
-    .block {
-      position: absolute;
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      border: 2px solid rgba(255,255,255,0.3);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2);
-      transition: box-shadow 0.2s, transform 0.2s;
-    }
-    .block.red { background: linear-gradient(45deg, #ff6b6b, #ee5a52); }
-    .block.blue { background: linear-gradient(45deg, #4ecdc4, #44a08d); }
-    .block.green { background: linear-gradient(45deg, #95e1d3, #81c784); }
-    .block.yellow { background: linear-gradient(45deg, #ffd93d, #ffb74d); }
-    .block.purple { background: linear-gradient(45deg, #a8e6cf, #9c88ff); }
-    .block.orange { background: linear-gradient(45deg, #ff8a80, #ff7043); }
-    .block.cyan { background: linear-gradient(45deg, #80deea, #4dd0e1); }
-    .block.clear-anim {
-      animation: blockClear 0.4s cubic-bezier(.2,1,.7,1.2);
-    }
-    @keyframes blockClear {
-      0% { box-shadow: 0 0 0 0 #ffd93d, 0 4px 8px rgba(0,0,0,0.3); }
-      60% { box-shadow: 0 0 20px 8px #ffd93d, 0 4px 8px rgba(0,0,0,0.3); }
-      100% { opacity: 0; box-shadow: 0 0 40px 16px #ffd93d, 0 4px 8px rgba(0,0,0,0.3); }
-    }
-    .next-piece {
-      position: absolute;
-      top: 20px;
-      right: -120px;
-      width: 100px;
-      height: 100px;
-      background: rgba(0,0,0,0.3);
-      border-radius: 10px;
-      border: 2px solid rgba(255,255,255,0.2);
-      backdrop-filter: blur(10px);
-    }
-    .next-label {
-      color: white;
-      text-align: center;
-      padding: 5px;
-      font-size: 14px;
-      font-weight: bold;
-    }
-    .game-over {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.9);
-      color: white;
-      padding: 30px;
-      border-radius: 20px;
-      text-align: center;
-      backdrop-filter: blur(20px);
-      display: none;
-      z-index: 10;
-    }
-    .game-over h2 {
-      margin-bottom: 15px;
-      font-size: 28px;
-      color: #ff6b6b;
-    }
-    .restart-btn {
-      background: linear-gradient(45deg, #667eea, #764ba2);
-      border: none;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 10px;
-      font-size: 16px;
-      margin-top: 15px;
-      cursor: pointer;
-    }
-    .controls-bar {
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      width: 100vw;
-      max-width: 100vw;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: rgba(24,26,34,0.95);
-      z-index: 100;
-      padding: 10px 0 10px 0;
-      box-sizing: border-box;
-    }
-    .controls-bar-inner {
-      width: 300px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .control-btn {
-      width: 70px;
-      height: 70px;
-      margin: 0 5px;
-      background: rgba(255,255,255,0.18);
-      border: 2px solid rgba(255,255,255,0.25);
-      border-radius: 50%;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-      font-size: 2.2em;
-      color: #fff;
-      text-shadow: 0 2px 6px #764ba2;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: auto;
-      transition: background 0.2s;
-      user-select: none;
-    }
-    .control-btn:active {
-      background: rgba(255,255,255,0.32);
-    }
-    @media (max-width: 480px) {
-      .game-board, .controls-bar-inner {
-        width: 280px;
-      }
-      .next-piece {
-        right: -110px;
-      }
-      .control-btn {
-        width: 58px;
-        height: 58px;
-        font-size: 1.7em;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KakaReza - Conveyor Belt Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f8ff;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 90%;
+            max-width: 800px;
+            background-color: #fff;
+            border: 5px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        #brand {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #4CAF50;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #score-board {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #level-info {
+            font-size: 1.2em;
+            margin-top: 10px;
+            color: #555;
+        }
+
+        #conveyor-belt-track {
+            width: 100%;
+            height: 100px;
+            background-color: #8B4513; /* SaddleBrown */
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #conveyor-belt {
+            display: flex;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            animation: moveBelt linear infinite;
+        }
+
+        .object {
+            font-size: 3em;
+            padding: 10px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s ease-out;
+            position: relative;
+            z-index: 1; /* Ensure objects are above the belt */
+        }
+
+        .object.selected {
+            transform: scale(1.2);
+            background-color: rgba(255, 255, 0, 0.3);
+            border-radius: 5px;
+        }
+
+        .object.collected {
+            animation: collect 0.5s ease-out forwards;
+        }
+
+        @keyframes moveBelt {
+            from { transform: translateX(0); }
+            to { transform: translateX(-100%); } /* Will be adjusted by JS */
+        }
+
+        @keyframes collect {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            50% { transform: translateY(-50px) scale(1.5); opacity: 0.8; }
+            100% { transform: translateY(-100px) scale(0); opacity: 0; }
+        }
+
+        #message {
+            font-size: 1.8em;
+            color: #d32f2f;
+            margin-top: 20px;
+            text-align: center;
+            min-height: 50px; /* Reserve space for messages */
+        }
+
+        #instructions {
+            background-color: #e0f7fa;
+            border: 2px solid #00bcd4;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            max-width: 600px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #instructions h2 {
+            color: #00796b;
+            margin-top: 0;
+        }
+
+        #instructions p {
+            color: #333;
+            line-height: 1.5;
+        }
+
+        #start-button {
+            padding: 15px 30px;
+            font-size: 1.8em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        #start-button:hover {
+            background-color: #45a049;
+        }
+
+        #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            text-align: center;
+            border-radius: 10px;
+        }
+
+        #game-over-screen button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-  <div class="game-header">
-    <span class="brand">KakaReza</span>
-    <div class="scoreboard">
-      <div class="score-label">Score: <span id="score">0</span>
-        <span class="score-pop" id="scorePop"></span>
-      </div>
-      <div class="score-label">Level: <span id="level">1</span></div>
-      <div class="score-label">Lines: <span id="lines">0</span></div>
+    <div id="game-container">
+        <div id="instructions">
+            <h2>Welcome to KakaReza!</h2>
+            <p><strong>Instructions:</strong></p>
+            <ul>
+                <li>Tap three of the same emoji objects on the conveyor belt to score.</li>
+                <li>Each set of three matching objects gives you 100 points.</li>
+                <li>You need to collect 30 objects (10 sets) in 40 seconds to pass each level.</li>
+                <li>The conveyor belt speeds up with each new level!</li>
+                <li>There are 4 challenging levels. Good luck!</li>
+            </ul>
+            <button id="start-button">Start Game</button>
+        </div>
+
+        <div id="game-elements" style="display: none;">
+            <div id="header">
+                <span id="brand">KakaReza</span>
+                <div id="score-board">
+                    Score: <span id="score">0</span> | Objects Collected: <span id="objects-collected">0</span>
+                </div>
+            </div>
+            <div id="level-info">
+                Level: <span id="level">1</span> | Time Left: <span id="time-left">40</span>s
+            </div>
+            <div id="conveyor-belt-track">
+                <div id="conveyor-belt"></div>
+            </div>
+            <div id="message"></div>
+        </div>
+
+        <div id="game-over-screen">
+            <h2 id="game-over-title"></h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <p>Objects Collected: <span id="final-objects-collected">0</span></p>
+            <button id="restart-button">Play Again</button>
+        </div>
     </div>
-  </div>
-  <div class="game-container">
-    <div class="game-board" id="gameBoard">
-      <div class="next-piece">
-        <div class="next-label">NEXT</div>
-        <div id="nextPiece"></div>
-      </div>
-    </div>
-    <div class="game-over" id="gameOver">
-      <h2>Game Over!</h2>
-      <p>Final Score: <span id="finalScore">0</span></p>
-      <button class="restart-btn" onclick="startNewGame()">Play Again</button>
-    </div>
-  </div>
-  <div class="controls-bar">
-    <div class="controls-bar-inner">
-      <div class="control-btn" id="btnLeft">&#8678;</div>
-      <div class="control-btn" id="btnRotate">&#8635;</div>
-      <div class="control-btn" id="btnDrop">&#11015;</div>
-      <div class="control-btn" id="btnRight">&#8680;</div>
-    </div>
-  </div>
-  <script>
-    document.body.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
 
-    class TetrisGame {
-      constructor() {
-        this.width = 10;
-        this.height = 20;
-        this.reset();
-        this.setupButtonControls();
-        this.startGameLoop();
-      }
+    <script>
+        const conveyorBelt = document.getElementById('conveyor-belt');
+        const scoreDisplay = document.getElementById('score');
+        const objectsCollectedDisplay = document.getElementById('objects-collected');
+        const levelDisplay = document.getElementById('level');
+        const timeLeftDisplay = document.getElementById('time-left');
+        const messageDisplay = document.getElementById('message');
+        const instructionsScreen = document.getElementById('instructions');
+        const gameElements = document.getElementById('game-elements');
+        const startButton = document.getElementById('start-button');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const gameOverTitle = document.getElementById('game-over-title');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const finalObjectsCollectedDisplay = document.getElementById('final-objects-collected');
+        const restartButton = document.getElementById('restart-button');
 
-      reset() {
-        this.board = Array(this.height).fill().map(() => Array(this.width).fill(0));
-        this.colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'cyan'];
-        this.pieces = [
-          [
-            [[1,1,1,1]],
-            [[1],[1],[1],[1]],
-            [[1,1,1,1]],
-            [[1],[1],[1],[1]]
-          ],
-          [
-            [[1,1],[1,1]],
-            [[1,1],[1,1]],
-            [[1,1],[1,1]],
-            [[1,1],[1,1]]
-          ],
-          [
-            [[0,1,0],[1,1,1]],
-            [[1,0],[1,1],[1,0]],
-            [[1,1,1],[0,1,0]],
-            [[0,1],[1,1],[0,1]]
-          ],
-          [
-            [[0,1,1],[1,1,0]],
-            [[1,0],[1,1],[0,1]],
-            [[0,1,1],[1,1,0]],
-            [[1,0],[1,1],[0,1]]
-          ],
-          [
-            [[1,1,0],[0,1,1]],
-            [[0,1],[1,1],[1,0]],
-            [[1,1,0],[0,1,1]],
-            [[0,1],[1,1],[1,0]]
-          ],
-          [
-            [[1,0,0],[1,1,1]],
-            [[1,1],[1,0],[1,0]],
-            [[1,1,1],[0,0,1]],
-            [[0,1],[0,1],[1,1]]
-          ],
-          [
-            [[0,0,1],[1,1,1]],
-            [[1,0],[1,0],[1,1]],
-            [[1,1,1],[1,0,0]],
-            [[1,1],[0,1],[0,1]]
-          ]
-        ];
-        this.score = 0;
-        this.level = 1;
-        this.lines = 0;
-        this.fallSpeed = 1000;
-        this.gameRunning = true;
-        this.isPaused = false;
-        this.gameBoard = document.getElementById('gameBoard');
-        this.nextPiece = null;
-        this.currentPiece = null;
-        this.generateNextPiece();
-        this.spawnPiece();
-        this.updateDisplay();
-      }
+        const emojis = ['🍎', '🍌', '🍇', '🍓', '🍒', '🍊', '🍍', '🥝', '🍋', '🍐'];
+        let score = 0;
+        let objectsCollected = 0;
+        let level = 1;
+        let timeLeft = 40;
+        let selectedObjects = [];
+        let beltSpeed = 20; // pixels per second (initial speed)
+        let animationFrameId;
+        let gameInterval;
+        let gameTimer;
+        const objectsPerLevel = 30; // 10 sets * 3 objects/set
+        const levels = 4;
+        const levelDuration = 40; // seconds
 
-      setupButtonControls() {
-        document.getElementById('btnLeft').onclick = () => this.tryMove(-1, 0);
-        document.getElementById('btnRight').onclick = () => this.tryMove(1, 0);
-        document.getElementById('btnRotate').onclick = () => this.tryRotate();
-        document.getElementById('btnDrop').onclick = () => this.tryMove(0, 1);
+        // --- Game Initialization and Start ---
 
-        document.getElementById('btnLeft').ontouchstart = (e) => { e.preventDefault(); this.tryMove(-1, 0); };
-        document.getElementById('btnRight').ontouchstart = (e) => { e.preventDefault(); this.tryMove(1, 0); };
-        document.getElementById('btnRotate').ontouchstart = (e) => { e.preventDefault(); this.tryRotate(); };
-        document.getElementById('btnDrop').ontouchstart = (e) => { e.preventDefault(); this.tryMove(0, 1); };
-      }
-
-      generateNextPiece() {
-        const pieceType = Math.floor(Math.random() * this.pieces.length);
-        const color = this.colors[Math.floor(Math.random() * this.colors.length)];
-        this.nextPiece = {
-          type: pieceType,
-          rotation: 0,
-          shape: this.pieces[pieceType][0].map(row => row.slice()),
-          color: color,
-          x: 0,
-          y: 0
-        };
-        this.displayNextPiece();
-      }
-
-      displayNextPiece() {
-        const nextContainer = document.getElementById('nextPiece');
-        nextContainer.innerHTML = '';
-        const shape = this.nextPiece.shape;
-        for (let row = 0; row < shape.length; row++) {
-          for (let col = 0; col < shape[row].length; col++) {
-            if (shape[row][col]) {
-              const block = document.createElement('div');
-              block.className = `block ${this.nextPiece.color}`;
-              block.style.left = (col * 20 + 10) + 'px';
-              block.style.top = (row * 20 + 30) + 'px';
-              block.style.width = '18px';
-              block.style.height = '18px';
-              nextContainer.appendChild(block);
-            }
-          }
-        }
-      }
-
-      spawnPiece() {
-        let shape = this.nextPiece.shape;
-        let startX = Math.floor((this.width - shape[0].length) / 2);
-        // Clamp X so the piece never spawns out of bounds
-        startX = Math.max(0, Math.min(startX, this.width - shape[0].length));
-        this.currentPiece = {
-          type: this.nextPiece.type,
-          rotation: 0,
-          shape: shape.map(row => row.slice()),
-          color: this.nextPiece.color,
-          x: startX,
-          y: 0
-        };
-        if (!this.isValidPosition(this.currentPiece)) {
-          this.gameOver();
-          return;
-        }
-        this.generateNextPiece();
-        this.render();
-      }
-
-      isValidPosition(piece) {
-        const shape = piece.shape;
-        for (let row = 0; row < shape.length; row++) {
-          for (let col = 0; col < shape[row].length; col++) {
-            if (shape[row][col]) {
-              const x = piece.x + col;
-              const y = piece.y + row;
-              if (x < 0 || x >= this.width || y < 0 || y >= this.height) return false;
-              if (this.board[y][x]) return false;
-            }
-          }
-        }
-        return true;
-      }
-
-      tryMove(dx, dy) {
-        if (!this.gameRunning) return false;
-        const testPiece = {
-          ...this.currentPiece,
-          x: this.currentPiece.x + dx,
-          y: this.currentPiece.y + dy
-        };
-        if (this.isValidPosition(testPiece)) {
-          this.currentPiece = testPiece;
-          this.render();
-          return true;
-        } else if (dy === 1) {
-          this.lockPiece();
-        }
-        return false;
-      }
-
-      tryRotate() {
-        if (!this.gameRunning) return;
-        const type = this.currentPiece.type;
-        const nextRot = (this.currentPiece.rotation + 1) % 4;
-        const rotated = this.pieces[type][nextRot];
-        // Try wall kicks: 0, -1, 1, -2, 2
-        for (let offset of [0, -1, 1, -2, 2]) {
-          let testPiece = {
-            ...this.currentPiece,
-            x: this.currentPiece.x + offset,
-            rotation: nextRot,
-            shape: rotated.map(row => row.slice())
-          };
-          // Clamp X so the rotated piece stays in bounds
-          let minX = 0, maxX = this.width - rotated[0].length;
-          testPiece.x = Math.max(minX, Math.min(testPiece.x, maxX));
-          if (this.isValidPosition(testPiece)) {
-            this.currentPiece = testPiece;
-            this.render();
-            break;
-          }
-        }
-      }
-
-      lockPiece() {
-        for (let row = 0; row < this.currentPiece.shape.length; row++) {
-          for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
-            if (this.currentPiece.shape[row][col]) {
-              const y = this.currentPiece.y + row;
-              const x = this.currentPiece.x + col;
-              if (y >= 0 && y < this.height && x >= 0 && x < this.width) {
-                this.board[y][x] = this.currentPiece.color;
-              }
-            }
-          }
-        }
-        this.checkLines();
-        this.spawnPiece();
-      }
-
-      checkLines() {
-        const fullLines = [];
-        for (let row = 0; row < this.height; row++) {
-          if (this.board[row].every(cell => cell !== 0)) {
-            fullLines.push(row);
-          }
-        }
-        if (fullLines.length > 0) {
-          this.clearLines(fullLines);
-        }
-      }
-
-      clearLines(fullLines) {
-        fullLines.forEach(row => {
-          for (let col = 0; col < this.width; col++) {
-            const block = this.getBlockAt(row, col);
-            if (block) block.classList.add('clear-anim');
-          }
+        startButton.addEventListener('click', () => {
+            instructionsScreen.style.display = 'none';
+            gameElements.style.display = 'block';
+            startGame();
         });
-        setTimeout(() => {
-          for (let row of fullLines) {
-            this.board.splice(row, 1);
-            this.board.unshift(Array(this.width).fill(0));
-          }
-          const lineScore = [0, 100, 300, 500, 800][fullLines.length];
-          this.animateScore("+" + (lineScore * this.level));
-          this.score += lineScore * this.level;
-          this.lines += fullLines.length;
-          if (this.lines >= this.level * 10) {
-            this.level++;
-            this.fallSpeed = Math.max(100, 1000 - (this.level-1)*80);
-            clearInterval(this.gameInterval);
-            this.startGameLoop();
-          }
-          this.updateDisplay();
-          this.render();
-        }, 400);
-      }
 
-      getBlockAt(row, col) {
-        const left = (col * 30) + "px";
-        const top = (row * 30) + "px";
-        return Array.from(this.gameBoard.querySelectorAll('.block')).find(b =>
-          b.style.left === left && b.style.top === top
-        );
-      }
+        restartButton.addEventListener('click', () => {
+            gameOverScreen.style.display = 'none';
+            resetGame();
+            startGame();
+        });
 
-      gameLoop() {
-        if (!this.gameRunning) return;
-        this.tryMove(0, 1);
-      }
-
-      startGameLoop() {
-        if (this.gameInterval) clearInterval(this.gameInterval);
-        this.gameInterval = setInterval(() => this.gameLoop(), this.fallSpeed);
-      }
-
-      render() {
-        Array.from(this.gameBoard.querySelectorAll('.block')).forEach(block => block.remove());
-        for (let row = 0; row < this.height; row++) {
-          for (let col = 0; col < this.width; col++) {
-            if (this.board[row][col]) {
-              const block = document.createElement('div');
-              block.className = `block ${this.board[row][col]}`;
-              block.style.left = (col * 30) + 'px';
-              block.style.top = (row * 30) + 'px';
-              this.gameBoard.appendChild(block);
-            }
-          }
+        function startGame() {
+            score = 0;
+            objectsCollected = 0;
+            level = 1;
+            timeLeft = levelDuration;
+            selectedObjects = [];
+            updateDisplay();
+            startLevel();
         }
-        if (this.currentPiece) {
-          for (let row = 0; row < this.currentPiece.shape.length; row++) {
-            for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
-              if (this.currentPiece.shape[row][col]) {
-                const x = this.currentPiece.x + col;
-                const y = this.currentPiece.y + row;
-                if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
-                  const block = document.createElement('div');
-                  block.className = `block ${this.currentPiece.color}`;
-                  block.style.left = (x * 30) + 'px';
-                  block.style.top = (y * 30) + 'px';
-                  this.gameBoard.appendChild(block);
+
+        function resetGame() {
+            conveyorBelt.innerHTML = ''; // Clear existing objects
+            selectedObjects = [];
+            clearTimeout(gameTimer);
+            clearInterval(gameInterval);
+            cancelAnimationFrame(animationFrameId);
+        }
+
+        function startLevel() {
+            beltSpeed = 20 + (level - 1) * 10; // Increase speed by 10 for each level
+            conveyorBelt.innerHTML = ''; // Clear previous level's objects
+            selectedObjects = [];
+            messageDisplay.textContent = '';
+            timeLeft = levelDuration;
+            updateDisplay();
+
+            // Reset animation
+            conveyorBelt.style.animation = 'none';
+            conveyorBelt.offsetWidth; // Trigger reflow
+            conveyorBelt.style.animation = `moveBelt ${calculateAnimationDuration()}s linear infinite`;
+
+            // Start dropping objects
+            clearInterval(gameInterval);
+            gameInterval = setInterval(dropObject, 1000 / (beltSpeed / 5)); // Adjust interval based on speed
+
+            // Start level timer
+            clearTimeout(gameTimer);
+            gameTimer = setTimeout(endLevel, levelDuration * 1000);
+
+            // Start time left countdown
+            clearInterval(timeCountdown);
+            timeCountdown = setInterval(() => {
+                timeLeft--;
+                timeLeftDisplay.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timeCountdown);
                 }
-              }
-            }
-          }
+            }, 1000);
         }
-      }
 
-      updateDisplay() {
-        document.getElementById('score').textContent = this.score;
-        document.getElementById('level').textContent = this.level;
-        document.getElementById('lines').textContent = this.lines;
-      }
+        function calculateAnimationDuration() {
+            // The animation duration should be inversely proportional to the speed
+            // This ensures objects move at the desired speed across the "visible" belt
+            const beltWidth = conveyorBelt.parentElement.offsetWidth; // Width of the track
+            return beltWidth / beltSpeed; // seconds
+        }
 
-      animateScore(text) {
-        const pop = document.getElementById('scorePop');
-        pop.textContent = text;
-        pop.classList.remove('active');
-        void pop.offsetWidth;
-        pop.classList.add('active');
-      }
+        function dropObject() {
+            if (conveyorBelt.children.length > 50) { // Limit number of objects on screen
+                return;
+            }
+            const object = document.createElement('div');
+            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            object.textContent = randomEmoji;
+            object.classList.add('object');
+            object.dataset.emoji = randomEmoji;
+            object.addEventListener('click', () => selectObject(object));
+            conveyorBelt.appendChild(object);
 
-      gameOver() {
-        this.gameRunning = false;
-        clearInterval(this.gameInterval);
-        document.getElementById('finalScore').textContent = this.score;
-        document.getElementById('gameOver').style.display = 'block';
-      }
-    }
+            // Adjust the actual animation speed of the belt's content to ensure consistent flow
+            const currentBeltWidth = conveyorBelt.scrollWidth;
+            conveyorBelt.style.width = `${currentBeltWidth + 70}px`; // Add space for new object
+            conveyorBelt.style.animationDuration = `${(currentBeltWidth + 70) / beltSpeed}s`;
+        }
 
-    let game = new TetrisGame();
+        function selectObject(object) {
+            if (object.classList.contains('collected')) return; // Prevent collecting already collected objects
 
-    function startNewGame() {
-      document.getElementById('gameOver').style.display = 'none';
-      document.getElementById('gameBoard').innerHTML = '<div class="next-piece"><div class="next-label">NEXT</div><div id="nextPiece"></div></div>';
-      game = new TetrisGame();
-    }
-  </script>
+            object.classList.toggle('selected');
+            const index = selectedObjects.indexOf(object);
+
+            if (index > -1) {
+                selectedObjects.splice(index, 1);
+            } else {
+                selectedObjects.push(object);
+                if (selectedObjects.length === 3) {
+                    checkMatch();
+                }
+            }
+        }
+
+        function checkMatch() {
+            if (selectedObjects.length === 3) {
+                const firstEmoji = selectedObjects[0].dataset.emoji;
+                const allMatch = selectedObjects.every(obj => obj.dataset.emoji === firstEmoji);
+
+                if (allMatch) {
+                    score += 100;
+                    objectsCollected += 3;
+                    messageDisplay.textContent = 'Awesome! +100 Points!';
+                    messageDisplay.style.color = '#4CAF50';
+                    selectedObjects.forEach(obj => {
+                        obj.classList.add('collected');
+                        obj.classList.remove('selected');
+                        setTimeout(() => obj.remove(), 500); // Remove after animation
+                    });
+                    // Immediately generate more objects to compensate for removed ones
+                    for (let i = 0; i < 3; i++) {
+                        dropObject();
+                    }
+                } else {
+                    messageDisplay.textContent = 'Oops! Not a match. Try again!';
+                    messageDisplay.style.color = '#d32f2f';
+                    selectedObjects.forEach(obj => obj.classList.remove('selected'));
+                }
+                selectedObjects = [];
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            scoreDisplay.textContent = score;
+            objectsCollectedDisplay.textContent = objectsCollected;
+            levelDisplay.textContent = level;
+            timeLeftDisplay.textContent = timeLeft;
+        }
+
+        function endLevel() {
+            clearInterval(gameInterval);
+            clearInterval(timeCountdown);
+            cancelAnimationFrame(animationFrameId);
+
+            if (objectsCollected >= objectsPerLevel) {
+                if (level < levels) {
+                    level++;
+                    messageDisplay.textContent = `Level ${level - 1} Complete! Moving to Level ${level}!`;
+                    messageDisplay.style.color = '#007bff';
+                    setTimeout(startLevel, 2000); // Give player time to read message
+                } else {
+                    showGameOverScreen(true); // Player won the game
+                }
+            } else {
+                showGameOverScreen(false); // Player failed to meet object goal
+            }
+        }
+
+        function showGameOverScreen(win) {
+            gameOverScreen.style.display = 'flex';
+            if (win) {
+                gameOverTitle.textContent = 'Congratulations! You Won!';
+                gameOverTitle.style.color = '#4CAF50';
+            } else {
+                gameOverTitle.textContent = 'Game Over!';
+                gameOverTitle.style.color = '#d32f2f';
+            }
+            finalScoreDisplay.textContent = score;
+            finalObjectsCollectedDisplay.textContent = objectsCollected;
+        }
+
+    </script>
 </body>
 </html>
