@@ -1,826 +1,214 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KakaReza - Conveyor Belt Game</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-
-```
+  <meta charset="UTF-8">
+  <title>KakaReza Game</title>
+  <style>
     body {
-        font-family: 'Arial', sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        height: 100vh;
-        overflow: hidden;
-        position: relative;
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background: #f7f4e9;
+      overflow: hidden;
+      touch-action: manipulation;
     }
-
-    .game-container {
-        width: 100%;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        position: relative;
+    #startScreen, #gameOverScreen {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
     }
-
-    .header {
-        background: linear-gradient(90deg, #2c3e50, #34495e);
-        color: white;
-        padding: 15px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        z-index: 1000;
+    #conveyor {
+      position: absolute;
+      bottom: 30%;
+      left: 0;
+      width: 100%;
+      height: 80px;
+      background: #ddd;
+      overflow: hidden;
+      border-top: 4px solid #aaa;
+      border-bottom: 4px solid #aaa;
     }
-
-    .brand {
-        font-size: 28px;
-        font-weight: bold;
-        color: #27ae60;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        letter-spacing: 1px;
+    .item {
+      position: absolute;
+      font-size: 40px;
+      cursor: pointer;
+      transition: transform 0.2s;
     }
-
-    .scoreboard {
-        display: flex;
-        gap: 20px;
-        align-items: center;
+    .selected {
+      transform: scale(1.5);
     }
-
-    .score-item {
-        text-align: center;
-        padding: 5px 10px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 8px;
-        border: 1px solid rgba(255,255,255,0.2);
+    #scoreBoard {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 20px;
+      background: #fff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-
-    .score-label {
-        font-size: 12px;
-        opacity: 0.8;
-        margin-bottom: 2px;
+    #brand {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-weight: bold;
+      font-size: 22px;
+      color: #444;
     }
-
-    .score-value {
-        font-size: 18px;
-        font-weight: bold;
-        color: #27ae60;
+    .animate {
+      animation: pop 0.4s ease-in-out;
     }
-
-    .conveyor-area {
-        flex: 1;
-        position: relative;
-        background: #34495e;
-        overflow: hidden;
-        border-top: 3px solid #2c3e50;
-        border-bottom: 3px solid #2c3e50;
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(2); }
+      100% { transform: scale(0); opacity: 0; }
     }
-
-    .conveyor-belt {
-        width: 100%;
-        height: 100%;
-        background: 
-            repeating-linear-gradient(
-                90deg,
-                #2c3e50 0,
-                #2c3e50 30px,
-                #34495e 30px,
-                #34495e 60px
-            );
-        position: relative;
-        animation: beltMove 3s linear infinite;
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #5c9;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 20px;
     }
-
-    @keyframes beltMove {
-        0% { background-position: 0 0; }
-        100% { background-position: 60px 0; }
-    }
-
-    .belt-item {
-        position: absolute;
-        font-size: 50px;
-        cursor: pointer;
-        z-index: 10;
-        transition: transform 0.15s ease;
-        filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.4));
-        animation: moveAcross linear;
-    }
-
-    .belt-item:active {
-        transform: scale(0.8);
-    }
-
-    @keyframes moveAcross {
-        0% {
-            left: -80px;
-            transform: rotate(-5deg);
-        }
-        50% {
-            transform: rotate(0deg);
-        }
-        100% {
-            left: calc(100% + 80px);
-            transform: rotate(5deg);
-        }
-    }
-
-    .collection-area {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        background: rgba(0,0,0,0.85);
-        padding: 20px;
-        border-radius: 15px;
-        color: white;
-        min-width: 250px;
-        border: 2px solid #27ae60;
-    }
-
-    .collection-title {
-        font-size: 16px;
-        color: #27ae60;
-        margin-bottom: 15px;
-        font-weight: bold;
-    }
-
-    .collection-item {
-        display: flex;
-        align-items: center;
-        margin: 8px 0;
-        padding: 5px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 8px;
-    }
-
-    .collection-emoji {
-        font-size: 28px;
-        margin-right: 12px;
-    }
-
-    .collection-progress {
-        flex: 1;
-        font-size: 14px;
-    }
-
-    .collection-count {
-        background: #e74c3c;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 15px;
-        font-weight: bold;
-        font-size: 12px;
-        min-width: 25px;
-        text-align: center;
-    }
-
-    .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.9);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 2000;
-    }
-
-    .modal-content {
-        background: linear-gradient(135deg, #fff, #f8f9fa);
-        padding: 40px;
-        border-radius: 20px;
-        text-align: center;
-        max-width: 400px;
-        margin: 20px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        border: 3px solid #27ae60;
-    }
-
-    .modal h1 {
-        color: #2c3e50;
-        margin-bottom: 20px;
-        font-size: 32px;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-    }
-
-    .modal h2 {
-        color: #2c3e50;
-        margin-bottom: 15px;
-        font-size: 24px;
-    }
-
-    .modal p {
-        margin: 12px 0;
-        line-height: 1.6;
-        color: #555;
-        font-size: 16px;
-    }
-
-    .game-btn {
-        background: linear-gradient(135deg, #27ae60, #229954);
-        color: white;
-        border: none;
-        padding: 15px 35px;
-        border-radius: 30px;
-        font-size: 18px;
-        font-weight: bold;
-        cursor: pointer;
-        margin: 15px 10px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .game-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    }
-
-    .game-btn:active {
-        transform: translateY(-1px);
-    }
-
-    .score-popup {
-        position: absolute;
-        font-size: 24px;
-        font-weight: bold;
-        color: #27ae60;
-        pointer-events: none;
-        z-index: 100;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        animation: scoreFloat 1.5s ease-out forwards;
-    }
-
-    @keyframes scoreFloat {
-        0% {
-            transform: scale(1) translateY(0);
-            opacity: 1;
-        }
-        50% {
-            transform: scale(1.3) translateY(-30px);
-            opacity: 1;
-        }
-        100% {
-            transform: scale(1) translateY(-60px);
-            opacity: 0;
-        }
-    }
-
-    .level-progress {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 6px;
-        background: linear-gradient(90deg, #27ae60, #229954);
-        transition: width 0.5s ease;
-        border-radius: 0 3px 0 0;
-    }
-
-    .pulse {
-        animation: pulseEffect 0.3s ease-in-out;
-    }
-
-    @keyframes pulseEffect {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-        100% { transform: scale(1); }
-    }
-
-    .celebration-burst {
-        position: absolute;
-        width: 100px;
-        height: 100px;
-        pointer-events: none;
-        z-index: 200;
-    }
-
-    .celebration-particle {
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        animation: particleExplode 1.2s ease-out forwards;
-    }
-
-    @keyframes particleExplode {
-        0% {
-            transform: scale(1) translate(0, 0);
-            opacity: 1;
-        }
-        100% {
-            transform: scale(0.3) translate(var(--dx), var(--dy));
-            opacity: 0;
-        }
-    }
-
-    .match-celebration {
-        position: absolute;
-        font-size: 60px;
-        font-weight: bold;
-        color: #27ae60;
-        pointer-events: none;
-        z-index: 150;
-        text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
-        animation: celebrationBounce 2s ease-out forwards;
-    }
-
-    @keyframes celebrationBounce {
-        0% {
-            transform: scale(0) rotate(0deg);
-            opacity: 0;
-        }
-        20% {
-            transform: scale(1.3) rotate(10deg);
-            opacity: 1;
-        }
-        40% {
-            transform: scale(1.1) rotate(-5deg);
-            opacity: 1;
-        }
-        60% {
-            transform: scale(1.2) rotate(3deg);
-            opacity: 1;
-        }
-        80% {
-            transform: scale(1) rotate(0deg);
-            opacity: 1;
-        }
-        100% {
-            transform: scale(0.8) rotate(0deg);
-            opacity: 0;
-        }
-    }
-
-    .screen-flash {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: radial-gradient(circle, rgba(39,174,96,0.3) 0%, transparent 70%);
-        pointer-events: none;
-        z-index: 50;
-        animation: flashEffect 0.6s ease-out forwards;
-        opacity: 0;
-    }
-
-    @keyframes flashEffect {
-        0% { opacity: 0; }
-        30% { opacity: 1; }
-        100% { opacity: 0; }
-    }
-
-    @media (max-width: 600px) {
-        .header {
-            padding: 12px 15px;
-        }
-        
-        .brand {
-            font-size: 24px;
-        }
-        
-        .scoreboard {
-            gap: 15px;
-        }
-        
-        .score-item {
-            padding: 4px 8px;
-        }
-        
-        .score-value {
-            font-size: 16px;
-        }
-        
-        .belt-item {
-            font-size: 45px;
-        }
-        
-        .collection-area {
-            bottom: 15px;
-            left: 15px;
-            min-width: 220px;
-            padding: 15px;
-        }
-        
-        .modal-content {
-            padding: 30px 25px;
-            margin: 15px;
-        }
-    }
-</style>
-```
-
+  </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="header">
-            <div class="brand">🍓 Smiley's Fresh</div>
-            <div class="scoreboard">
-                <div class="score-item">
-                    <div class="score-label">Level</div>
-                    <div class="score-value" id="currentLevel">1</div>
-                </div>
-                <div class="score-item">
-                    <div class="score-label">Score</div>
-                    <div class="score-value" id="totalScore">0</div>
-                </div>
-                <div class="score-item">
-                    <div class="score-label">Objects</div>
-                    <div class="score-value" id="objectCount">0</div>
-                </div>
-                <div class="score-item">
-                    <div class="score-label">Time</div>
-                    <div class="score-value" id="timeLeft">40</div>
-                </div>
-            </div>
-        </div>
 
-```
-    <div class="conveyor-area">
-        <div class="conveyor-belt" id="conveyorBelt">
-            <div class="level-progress" id="levelProgress"></div>
-        </div>
-    </div>
-
-    <div class="collection-area">
-        <div class="collection-title">📦 Collection Progress</div>
-        <div id="collectionDisplay"></div>
-    </div>
+<div id="startScreen">
+  <h1>Welcome to KakaReza 🎮</h1>
+  <p>Tap on three of the same emoji objects on the conveyor belt to collect them. Get 30 to win the level!</p>
+  <p>4 Levels. Each 40 seconds. Speed increases!</p>
+  <button onclick="startGame()">Start</button>
 </div>
 
-<!-- Start Modal -->
-<div class="modal" id="startModal">
-    <div class="modal-content">
-        <h1>🍓 Smiley's Fresh</h1>
-        <h2>🥤 Smoothie Factory Challenge</h2>
-        <p><strong>📋 Instructions:</strong></p>
-        <p>• Tap objects on the moving belt</p>
-        <p>• Collect 3 of the same type to score</p>
-        <p>• Each set = 100 points + 3 objects</p>
-        <p>• Goal: 30 objects in 40 seconds</p>
-        <p>• 4 levels with increasing speed</p>
-        <p>• Ready to start? Good luck! 🍀</p>
-        <button class="game-btn" onclick="initGame()">🚀 Start Game</button>
-    </div>
-</div>
-
-<!-- Level Complete Modal -->
-<div class="modal" id="levelCompleteModal" style="display: none;">
-    <div class="modal-content">
-        <h2 id="levelCompleteTitle">🎉 Level Complete!</h2>
-        <p id="levelCompleteText"></p>
-        <button class="game-btn" id="nextLevelBtn" onclick="startNextLevel()">Next Level</button>
-    </div>
-</div>
-
-<!-- Game Over Modal -->
-<div class="modal" id="gameOverModal" style="display: none;">
-    <div class="modal-content">
-        <h2 id="gameOverTitle">⏰ Time's Up!</h2>
-        <p id="gameOverText"></p>
-        <button class="game-btn" onclick="restartGame()">🔄 Try Again</button>
-    </div>
-</div>
+<div id="scoreBoard">Score: 0 | Collected: 0/30 | Level: 1</div>
+<div id="brand">KakaReza</div>
+<div id="conveyor"></div>
 
 <script>
-    // Game state
-    const gameState = {
-        level: 1,
-        score: 0,
-        objectsCollected: 0,
-        timeRemaining: 40,
-        isPlaying: false,
-        gameTimer: null,
-        spawnTimer: null,
-        collectedItems: {},
-        beltSpeed: 8000,
-        spawnRate: 1500
-    };
+  const conveyor = document.getElementById('conveyor');
+  const scoreBoard = document.getElementById('scoreBoard');
+  const startScreen = document.getElementById('startScreen');
 
-    // Game objects (emojis) - fruits and smoothies
-    const gameEmojis = [
-        '🍎', '🍌', '🍊', '🍇', '🍓', '🥝', '🍑', '🥭', '🍍', '🥥', '🍒', 
-        '🥤', '🧋', '🍹', '🧊', '🥛'
-    ];
+  const emojis = ['🍎','🍌','🍕','🎈','⚽','🐶','🚗','🍩','🎁'];
+  let speed = 1; // pixels/frame
+  let selected = [];
+  let score = 0;
+  let collected = 0;
+  let level = 1;
+  let objectsOnScreen = [];
+  let gameInterval;
+  let spawnInterval;
+  let timeLeft = 40;
 
-    function initGame() {
-        document.getElementById('startModal').style.display = 'none';
-        resetGameState();
-        startGameplay();
-    }
+  function startGame() {
+    startScreen.style.display = 'none';
+    score = 0;
+    collected = 0;
+    level = 1;
+    timeLeft = 40;
+    updateScore();
+    startLevel();
+  }
 
-    function resetGameState() {
-        gameState.level = 1;
-        gameState.score = 0;
-        gameState.objectsCollected = 0;
-        gameState.timeRemaining = 40;
-        gameState.collectedItems = {};
-        gameState.beltSpeed = 8000;
-        gameState.spawnRate = 1500;
-        updateDisplay();
-        clearConveyor();
-    }
+  function startLevel() {
+    clearInterval(gameInterval);
+    clearInterval(spawnInterval);
+    objectsOnScreen.forEach(el => conveyor.removeChild(el));
+    objectsOnScreen = [];
+    selected = [];
 
-    function startGameplay() {
-        gameState.isPlaying = true;
-        
-        // Start countdown timer
-        gameState.gameTimer = setInterval(() => {
-            gameState.timeRemaining--;
-            updateDisplay();
-            
-            if (gameState.timeRemaining <= 0) {
-                endLevel();
-            }
-        }, 1000);
+    spawnInterval = setInterval(spawnItem, 800 - level * 100);
+    gameInterval = setInterval(gameLoop, 16); // ~60fps
 
-        // Start spawning objects
-        spawnGameObjects();
-    }
-
-    function spawnGameObjects() {
-        if (!gameState.isPlaying) return;
-
-        const randomEmoji = gameEmojis[Math.floor(Math.random() * gameEmojis.length)];
-        createBeltObject(randomEmoji);
-        
-        // Schedule next spawn
-        gameState.spawnTimer = setTimeout(spawnGameObjects, gameState.spawnRate);
-    }
-
-    function createBeltObject(emoji) {
-        const beltObject = document.createElement('div');
-        beltObject.className = 'belt-item';
-        beltObject.textContent = emoji;
-        
-        // Random vertical position
-        const conveyor = document.getElementById('conveyorBelt');
-        const maxTop = conveyor.offsetHeight - 70;
-        beltObject.style.top = Math.random() * maxTop + 20 + 'px';
-        
-        // Set movement speed
-        beltObject.style.animationDuration = gameState.beltSpeed + 'ms';
-        
-        // Add tap handler
-        beltObject.addEventListener('click', () => handleObjectTap(beltObject, emoji));
-        
-        conveyor.appendChild(beltObject);
-        
-        // Auto-remove after animation
-        setTimeout(() => {
-            if (beltObject.parentNode) {
-                beltObject.parentNode.removeChild(beltObject);
-            }
-        }, gameState.beltSpeed);
-    }
-
-    function handleObjectTap(element, emoji) {
-        if (!gameState.isPlaying) return;
-
-        // Initialize counter if needed
-        if (!gameState.collectedItems[emoji]) {
-            gameState.collectedItems[emoji] = 0;
-        }
-
-        // Increment collection
-        gameState.collectedItems[emoji]++;
-        gameState.objectsCollected++;
-
-        // Show collection feedback
-        showScorePopup(element, '+1');
-        element.classList.add('pulse');
-
-        // Check for complete set (3 of same type)
-        if (gameState.collectedItems[emoji] === 3) {
-            gameState.collectedItems[emoji] = 0; // Reset counter
-            gameState.score += 100;
-            
-            // Enhanced celebration effects
-            createCelebrationBurst(element, emoji);
-            showMatchCelebration(element);
-            createScreenFlash();
-            showScorePopup(element, '🎉 MATCH! +100');
-        }
-
-        // Remove the tapped object
-        element.remove();
-        updateDisplay();
-    }
-
-    function showScorePopup(element, text) {
-        const popup = document.createElement('div');
-        popup.className = 'score-popup';
-        popup.textContent = text;
-        popup.style.left = element.offsetLeft + 'px';
-        popup.style.top = element.offsetTop + 'px';
-        
-        document.getElementById('conveyorBelt').appendChild(popup);
-        
-        setTimeout(() => {
-            if (popup.parentNode) {
-                popup.parentNode.removeChild(popup);
-            }
-        }, 1500);
-    }
-
-    function createCelebrationBurst(element, emoji) {
-        const burst = document.createElement('div');
-        burst.className = 'celebration-burst';
-        burst.style.left = (element.offsetLeft - 50) + 'px';
-        burst.style.top = (element.offsetTop - 50) + 'px';
-        
-        // Create multiple colored particles
-        const colors = ['#27ae60', '#f39c12', '#e74c3c', '#3498db', '#9b59b6', '#f1c40f'];
-        
-        for (let i = 0; i < 12; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'celebration-particle';
-            particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            
-            // Random explosion direction
-            const angle = (i / 12) * 2 * Math.PI;
-            const distance = 60 + Math.random() * 40;
-            const dx = Math.cos(angle) * distance;
-            const dy = Math.sin(angle) * distance;
-            
-            particle.style.setProperty('--dx', dx + 'px');
-            particle.style.setProperty('--dy', dy + 'px');
-            particle.style.left = '50px';
-            particle.style.top = '50px';
-            
-            burst.appendChild(particle);
-        }
-        
-        document.getElementById('conveyorBelt').appendChild(burst);
-        
-        setTimeout(() => {
-            if (burst.parentNode) {
-                burst.parentNode.removeChild(burst);
-            }
-        }, 1200);
-    }
-
-    function showMatchCelebration(element) {
-        const celebration = document.createElement('div');
-        celebration.className = 'match-celebration';
-        celebration.textContent = '🎉 MATCH! 🎉';
-        celebration.style.left = (element.offsetLeft - 50) + 'px';
-        celebration.style.top = (element.offsetTop - 30) + 'px';
-        
-        document.getElementById('conveyorBelt').appendChild(celebration);
-        
-        setTimeout(() => {
-            if (celebration.parentNode) {
-                celebration.parentNode.removeChild(celebration);
-            }
-        }, 2000);
-    }
-
-    function createScreenFlash() {
-        const flash = document.createElement('div');
-        flash.className = 'screen-flash';
-        document.body.appendChild(flash);
-        
-        setTimeout(() => {
-            if (flash.parentNode) {
-                flash.parentNode.removeChild(flash);
-            }
-        }, 600);
-    }
-
-    function updateDisplay() {
-        document.getElementById('currentLevel').textContent = gameState.level;
-        document.getElementById('totalScore').textContent = gameState.score;
-        document.getElementById('objectCount').textContent = gameState.objectsCollected;
-        document.getElementById('timeLeft').textContent = gameState.timeRemaining;
-        
-        // Update progress bar
-        const progress = ((40 - gameState.timeRemaining) / 40) * 100;
-        document.getElementById('levelProgress').style.width = progress + '%';
-        
-        // Update collection display
-        updateCollectionDisplay();
-    }
-
-    function updateCollectionDisplay() {
-        const display = document.getElementById('collectionDisplay');
-        display.innerHTML = '';
-        
-        for (const [emoji, count] of Object.entries(gameState.collectedItems)) {
-            if (count > 0) {
-                const item = document.createElement('div');
-                item.className = 'collection-item';
-                item.innerHTML = `
-                    <span class="collection-emoji">${emoji}</span>
-                    <span class="collection-progress">${count}/3</span>
-                    <span class="collection-count">${count}</span>
-                `;
-                display.appendChild(item);
-            }
-        }
-        
-        if (display.children.length === 0) {
-            display.innerHTML = '<div style="text-align: center; opacity: 0.6; font-style: italic;">No items collected yet</div>';
-        }
-    }
-
-    function endLevel() {
-        gameState.isPlaying = false;
-        clearInterval(gameState.gameTimer);
-        clearTimeout(gameState.spawnTimer);
-
-        const title = document.getElementById('levelCompleteTitle');
-        const text = document.getElementById('levelCompleteText');
-        const btn = document.getElementById('nextLevelBtn');
-
-        if (gameState.objectsCollected >= 30) {
-            // Level completed successfully
-            if (gameState.level < 4) {
-                title.textContent = `🎉 Level ${gameState.level} Complete!`;
-                text.textContent = `Excellent! You collected ${gameState.objectsCollected} objects and scored ${gameState.score} points. Ready for the next challenge?`;
-                btn.textContent = '🚀 Next Level';
-                btn.onclick = startNextLevel;
-            } else {
-                // Game completed
-                title.textContent = '🏆 Game Complete!';
-                text.textContent = `Amazing! You've conquered all 4 levels with a total score of ${gameState.score} points!`;
-                btn.textContent = '🎮 Play Again';
-                btn.onclick = restartGame;
-            }
-            document.getElementById('levelCompleteModal').style.display = 'flex';
+    let levelTimer = setInterval(() => {
+      timeLeft--;
+      if (timeLeft <= 0) {
+        clearInterval(levelTimer);
+        clearInterval(spawnInterval);
+        clearInterval(gameInterval);
+        if (collected >= 30) {
+          level++;
+          if (level > 4) {
+            alert('🎉 You completed all levels! Final Score: ' + score);
+            location.reload();
+          } else {
+            timeLeft = 40;
+            collected = 0;
+            updateScore();
+            alert('Level Up! Starting Level ' + level);
+            startLevel();
+          }
         } else {
-            // Failed to meet objective
-            document.getElementById('gameOverTitle').textContent = '⏰ Time\'s Up!';
-            document.getElementById('gameOverText').textContent = `You collected ${gameState.objectsCollected}/30 objects and scored ${gameState.score} points. Try again to beat this level!`;
-            document.getElementById('gameOverModal').style.display = 'flex';
+          alert('Game Over. You didn’t collect enough items!');
+          location.reload();
         }
+      }
+    }, 1000);
+  }
+
+  function spawnItem() {
+    const item = document.createElement('div');
+    item.classList.add('item');
+    item.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+    item.style.left = '0px';
+    item.style.top = Math.random() * 20 + 'px';
+    item.onclick = () => selectItem(item);
+    conveyor.appendChild(item);
+    objectsOnScreen.push(item);
+  }
+
+  function gameLoop() {
+    objectsOnScreen.forEach((item, i) => {
+      let currentLeft = parseFloat(item.style.left);
+      item.style.left = currentLeft + (1 + level * 0.5) + 'px';
+      if (currentLeft > window.innerWidth) {
+        conveyor.removeChild(item);
+        objectsOnScreen.splice(i, 1);
+      }
+    });
+  }
+
+  function selectItem(item) {
+    if (item.classList.contains('selected')) return;
+    item.classList.add('selected');
+    selected.push(item);
+
+    if (selected.length === 3) {
+      let allSame = selected.every(el => el.innerText === selected[0].innerText);
+      if (allSame) {
+        selected.forEach(el => {
+          el.classList.add('animate');
+          setTimeout(() => {
+            if (conveyor.contains(el)) {
+              conveyor.removeChild(el);
+              objectsOnScreen.splice(objectsOnScreen.indexOf(el), 1);
+            }
+          }, 400);
+        });
+        collected += 3;
+        score += 100;
+      } else {
+        selected.forEach(el => el.classList.remove('selected'));
+      }
+      selected = [];
+      updateScore();
     }
+  }
 
-    function startNextLevel() {
-        document.getElementById('levelCompleteModal').style.display = 'none';
-        
-        // Advance to next level
-        gameState.level++;
-        gameState.timeRemaining = 40;
-        gameState.objectsCollected = 0;
-        gameState.collectedItems = {};
-        
-        // Increase difficulty
-        gameState.beltSpeed = Math.max(gameState.beltSpeed - 1000, 4000);
-        gameState.spawnRate = Math.max(gameState.spawnRate - 200, 800);
-        
-        clearConveyor();
-        updateDisplay();
-        startGameplay();
-    }
-
-    function restartGame() {
-        document.getElementById('levelCompleteModal').style.display = 'none';
-        document.getElementById('gameOverModal').style.display = 'none';
-        document.getElementById('startModal').style.display = 'flex';
-    }
-
-    function clearConveyor() {
-        const conveyor = document.getElementById('conveyorBelt');
-        const objects = conveyor.querySelectorAll('.belt-item, .score-popup');
-        objects.forEach(obj => obj.remove());
-    }
-
-    // Prevent mobile zoom and scroll issues
-    document.addEventListener('touchstart', function(e) {
-        if (e.touches.length > 1) {
-            e.preventDefault();
-        }
-    }, { passive: false });
-
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', function(e) {
-        const now = Date.now();
-        if (now - lastTouchEnd <= 300) {
-            e.preventDefault();
-        }
-        lastTouchEnd = now;
-    }, { passive: false });
-
-    // Adjust conveyor belt animation speed based on level
-    function updateBeltSpeed() {
-        const belt = document.getElementById('conveyorBelt');
-        const newDuration = Math.max(3 - (gameState.level * 0.5), 1);
-        belt.style.animationDuration = newDuration + 's';
-    }
+  function updateScore() {
+    scoreBoard.innerText = `Score: ${score} | Collected: ${collected}/30 | Level: ${level}`;
+  }
 </script>
-```
 
 </body>
 </html>
