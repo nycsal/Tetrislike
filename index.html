@@ -8,7 +8,7 @@
       height: 100%;
       margin: 0;
       padding: 0;
-      background: #222;
+      background: #18171d;
       color: #fff;
       font-family: 'Segoe UI', Arial, sans-serif;
       overflow: hidden;
@@ -25,7 +25,7 @@
     #scoreboard {
       width: 100%;
       text-align: center;
-      font-size: 1.8em;
+      font-size: 1.7em;
       margin: 0.5em 0 0.2em 0;
       letter-spacing: 2px;
       font-weight: bold;
@@ -33,27 +33,32 @@
       text-shadow: 1px 1px 4px #000;
     }
     #kakabanner {
-      font-size: 2em;
-      font-family: 'Comic Sans MS', cursive, sans-serif;
+      font-size: 2.2em;
+      font-family: 'Brush Script MT', 'Comic Sans MS', cursive, sans-serif;
       color: #ff59c7;
       margin-bottom: 0.2em;
       letter-spacing: 3px;
       text-shadow: 2px 2px 8px #000;
+    }
+    #gamebox {
+      position: relative;
+      width: 280px;
+      height: 560px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: none;
     }
     #game {
       background: #181818;
       border: 4px solid #ff59c7;
       border-radius: 16px;
       box-shadow: 0 0 24px #ff59c7aa;
-      margin: 0 auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
       width: 280px;
       height: 560px;
-      transition: none;
-      touch-action: none;
+      position: relative;
+      z-index: 1;
     }
     canvas {
       display: block;
@@ -63,11 +68,56 @@
       height: 100% !important;
       touch-action: none;
     }
+    .ctrl-btn {
+      position: absolute;
+      z-index: 2;
+      opacity: 0.25;
+      background: #fff;
+      border-radius: 50%;
+      width: 54px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      color: #18171d;
+      border: 2px solid #ff59c7;
+      user-select: none;
+      transition: opacity 0.2s;
+      box-shadow: 0 0 10px #ff59c7;
+    }
+    .ctrl-btn:active {
+      opacity: 0.5;
+    }
+    #btn-left { left: -60px; top: 40px; }
+    #btn-right { right: -60px; top: 40px; }
+    #btn-drop { left: 50%; transform: translateX(-50%); bottom: -60px; }
+    #btn-rotate { right: -60px; top: 50%; transform: translateY(-50%); }
     #controls {
-      margin-top: 0.8em;
+      margin-top: 0.7em;
       color: #aaa;
       font-size: 1em;
       text-align: center;
+      user-select: none;
+    }
+    @media (max-width: 400px) {
+      #gamebox, #game {
+        width: 98vw;
+        height: 196vw;
+        max-width: 98vw;
+        max-height: 98vw;
+        min-width: 180px;
+        min-height: 360px;
+      }
+      .ctrl-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2em;
+      }
+      #btn-left { left: -44px; }
+      #btn-right { right: -44px; }
+      #btn-drop { bottom: -44px; }
+      #btn-rotate { right: -44px; }
     }
   </style>
 </head>
@@ -78,17 +128,23 @@
     <span id="lines">Lines: 0</span> &nbsp;|&nbsp;
     <span id="level">Level: 1</span>
   </div>
-  <div id="game">
-    <canvas id="tetris" width="280" height="560"></canvas>
+  <div id="gamebox">
+    <div id="game">
+      <canvas id="tetris" width="280" height="560"></canvas>
+    </div>
+    <div id="btn-left" class="ctrl-btn">&#8592;</div>
+    <div id="btn-right" class="ctrl-btn">&#8594;</div>
+    <div id="btn-drop" class="ctrl-btn">&#8595;</div>
+    <div id="btn-rotate" class="ctrl-btn">&#8635;</div>
   </div>
   <div id="controls">
-    <p>Tap: Rotate<br>
-    Tap Left: Move Left<br>
-    Tap Right: Move Right<br>
-    Swipe Down: Drop</p>
+    <p>Use on-screen buttons or swipe/tap:<br>
+    Left/Right: Move<br>
+    Rotate: Rotate<br>
+    Down: Drop</p>
   </div>
   <script>
-    // Game constants
+    // --- Tetris Constants ---
     const COLS = 10, ROWS = 20, BLOCK = 28;
     const COLORS = [
       null,
@@ -111,7 +167,7 @@
       [[0,0],[1,0],[1,1],[2,1]]  // Z
     ];
 
-    // Game variables
+    // --- Game State ---
     let arena = createMatrix(COLS, ROWS);
     let score = 0, lines = 0, level = 1, dropInterval = 800, dropCounter = 0, lastTime = 0, gameOver = false;
     let piece = null, nextPiece = null;
@@ -120,6 +176,7 @@
     const canvas = document.getElementById('tetris');
     const ctx = canvas.getContext('2d');
 
+    // --- Core Functions ---
     function createMatrix(w, h) {
       const matrix = [];
       while (h--) matrix.push(new Array(w).fill(0));
@@ -300,10 +357,10 @@
       requestAnimationFrame(update);
     }
 
-    // Touch controls
+    // --- Touch Controls (Canvas) ---
     canvas.addEventListener('touchstart', e => {
       if (gameOver) return;
-      if (e.touches.length > 1) return; // ignore multi-touch
+      if (e.touches.length > 1) return;
       touchStart = e.touches[0];
       touchMoved = false;
     });
@@ -332,7 +389,13 @@
       touchStart = null;
     });
 
-    // Desktop fallback controls (optional)
+    // --- On-screen Control Buttons ---
+    document.getElementById('btn-left').addEventListener('touchstart', e => { e.preventDefault(); playerMove(-1); });
+    document.getElementById('btn-right').addEventListener('touchstart', e => { e.preventDefault(); playerMove(1); });
+    document.getElementById('btn-drop').addEventListener('touchstart', e => { e.preventDefault(); hardDrop(); });
+    document.getElementById('btn-rotate').addEventListener('touchstart', e => { e.preventDefault(); playerRotate(); });
+
+    // --- Desktop fallback controls (optional) ---
     document.addEventListener('keydown', e => {
       if (gameOver) return;
       if (e.key === 'ArrowLeft') playerMove(-1);
@@ -341,11 +404,10 @@
       else if (e.key === 'ArrowDown') hardDrop();
     });
 
-    // Start game
+    // --- Start Game ---
     resetPiece();
     updateScore();
     update();
   </script>
 </body>
 </html>
-
