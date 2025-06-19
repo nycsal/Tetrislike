@@ -38,8 +38,9 @@
     }
     #kakabanner {
       font-size: 2.2em;
-      font-family: 'Brush Script MT', 'Comic Sans MS', cursive, sans-serif;
-      color: #ff59c7;
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      font-weight: bold;
+      color: #0077ff;
       margin-bottom: 0.2em;
       letter-spacing: 3px;
       text-shadow: 2px 2px 8px #000;
@@ -56,9 +57,9 @@
     }
     #game {
       background: #181818;
-      border: 4px solid #ff59c7;
+      border: 4px solid #0077ff;
       border-radius: 16px;
-      box-shadow: 0 0 24px #ff59c7aa;
+      box-shadow: 0 0 24px #0077ffaa;
       width: 280px;
       height: 560px;
       position: relative;
@@ -85,10 +86,10 @@
       justify-content: center;
       font-size: 2em;
       color: #18171d;
-      border: 2px solid #ff59c7;
+      border: 2px solid #0077ff;
       user-select: none;
       transition: opacity 0.2s;
-      box-shadow: 0 0 10px #ff59c7;
+      box-shadow: 0 0 10px #0077ff;
       touch-action: manipulation;
     }
     .ctrl-btn:active { opacity: 0.5; }
@@ -114,7 +115,7 @@
       font-size: 2.4em;
       margin: 0.3em;
       color: #ffde59;
-      text-shadow: 0 0 8px #ff59c7;
+      text-shadow: 0 0 8px #0077ff;
     }
     #howtoplay .hint {
       margin: 0.6em 0 0.2em 0;
@@ -370,7 +371,6 @@
         moved = true;
       }
       piece.pos.y--;
-      // If piece is blocked at spawn, still lock but don't freeze
       lockPieceWithAnim();
     }
 
@@ -406,14 +406,16 @@
 
     function arenaSweep() {
       let rowCount = 0;
-      outer: for (let y = arena.length-1; y >= 0; --y) {
-        for (let x = 0; x < arena[y].length; ++x) {
-          if (!arena[y][x]) continue outer;
+      let y = arena.length - 1;
+      while (y >= 0) {
+        if (arena[y].every(cell => cell !== 0)) {
+          arena.splice(y, 1);
+          arena.unshift(new Array(COLS).fill(0));
+          rowCount++;
+          // Do not decrement y to check new row at this index
+        } else {
+          y--;
         }
-        const row = arena.splice(y, 1)[0].fill(0);
-        arena.unshift(row);
-        ++rowCount;
-        ++y;
       }
       return rowCount;
     }
@@ -457,7 +459,6 @@
       if (animatingLock) {
         animTimer += delta;
         draw();
-        // Failsafe: never get stuck animating
         if (animTimer > 180) {
           animatingLock = false;
           finishLockPiece();
@@ -547,7 +548,6 @@
     resetGameState();
     draw();
     // Game starts after overlay is dismissed
-
   </script>
 </body>
 </html>
