@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KaKaTris</title>
   <style>
     html, body {
@@ -219,15 +219,30 @@
     ];
 
     // --- Game State ---
-    let arena = createMatrix(COLS, ROWS);
-    let score = 0, lines = 0, level = 1, dropInterval = 800, dropCounter = 0, lastTime = 0, gameOver = false;
-    let piece = null, nextPiece = null;
+    let arena, score, lines, level, dropInterval, dropCounter, lastTime, gameOver;
+    let piece, nextPiece;
     let touchStart = null, touchMoved = false;
     let gameStarted = false;
     let animatingLock = false, animTimer = 0, animBlocks = [];
 
     const canvas = document.getElementById('tetris');
     const ctx = canvas.getContext('2d');
+
+    function resetGameState() {
+      arena = createMatrix(COLS, ROWS);
+      score = 0;
+      lines = 0;
+      level = 1;
+      dropInterval = 800;
+      dropCounter = 0;
+      lastTime = 0;
+      gameOver = false;
+      piece = null;
+      nextPiece = null;
+      animatingLock = false;
+      animTimer = 0;
+      animBlocks = [];
+    }
 
     // --- Core Functions ---
     function createMatrix(w, h) {
@@ -309,12 +324,13 @@
       nextPiece = types[Math.floor(Math.random()*7)];
       if (collide(arena, piece)) {
         gameOver = true;
+        animatingLock = false;
         document.getElementById('score').textContent = 'GAME OVER';
       }
     }
 
     function playerDrop() {
-      if (animatingLock) return;
+      if (animatingLock || gameOver) return;
       piece.pos.y++;
       if (collide(arena, piece)) {
         piece.pos.y--;
@@ -325,13 +341,13 @@
     }
 
     function playerMove(dir) {
-      if (animatingLock) return;
+      if (animatingLock || gameOver) return;
       piece.pos.x += dir;
       if (collide(arena, piece)) piece.pos.x -= dir;
     }
 
     function playerRotate() {
-      if (animatingLock) return;
+      if (animatingLock || gameOver) return;
       const pos = piece.pos.x;
       let offset = 1;
       rotate(piece.matrix, 1);
@@ -347,22 +363,19 @@
     }
 
     function hardDrop() {
-      if (animatingLock) return;
+      if (animatingLock || gameOver) return;
       let moved = false;
       while (!collide(arena, piece)) {
         piece.pos.y++;
         moved = true;
       }
       piece.pos.y--;
-      if (!moved && collide(arena, piece)) {
-        // Already blocked, can't drop
-        lockPieceWithAnim();
-        return;
-      }
+      // If piece is blocked at spawn, still lock but don't freeze
       lockPieceWithAnim();
     }
 
     function lockPieceWithAnim() {
+      if (animatingLock) return;
       animBlocks = [];
       piece.matrix.forEach((row, y) => {
         row.forEach((value, x) => {
@@ -386,6 +399,9 @@
       }
       updateScore();
       resetPiece();
+      animatingLock = false;
+      animTimer = 0;
+      animBlocks = [];
     }
 
     function arenaSweep() {
@@ -441,12 +457,14 @@
       if (animatingLock) {
         animTimer += delta;
         draw();
-        if (animTimer > 180) { // 180ms animation
+        // Failsafe: never get stuck animating
+        if (animTimer > 180) {
           animatingLock = false;
           finishLockPiece();
+        } else {
+          requestAnimationFrame(update);
+          return;
         }
-        requestAnimationFrame(update);
-        return;
       }
 
       dropCounter += delta;
@@ -518,6 +536,7 @@
 
     function startGame() {
       if (gameStarted) return;
+      resetGameState();
       gameStarted = true;
       resetPiece();
       updateScore();
@@ -525,6 +544,7 @@
     }
 
     // --- Start paused, show how to play ---
+    resetGameState();
     draw();
     // Game starts after overlay is dismissed
 
