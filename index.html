@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KaKaTris</title>
   <style>
     html, body {
@@ -12,7 +12,7 @@
       color: #fff;
       font-family: 'Segoe UI', Arial, sans-serif;
       overflow: hidden;
-      touch-action: none;
+      touch-action: manipulation;
     }
     body {
       display: flex;
@@ -22,6 +22,8 @@
       height: 100vh;
       width: 100vw;
       overscroll-behavior: contain;
+      -webkit-user-select: none;
+      user-select: none;
     }
     #scoreboard {
       width: 100%;
@@ -68,7 +70,7 @@
       border-radius: 12px;
       width: 100% !important;
       height: 100% !important;
-      touch-action: none;
+      touch-action: manipulation;
     }
     .ctrl-btn {
       position: absolute;
@@ -87,6 +89,7 @@
       user-select: none;
       transition: opacity 0.2s;
       box-shadow: 0 0 10px #ff59c7;
+      touch-action: manipulation;
     }
     .ctrl-btn:active { opacity: 0.5; }
     #btn-rotate { right: -60px; top: 50%; transform: translateY(-50%); }
@@ -103,6 +106,9 @@
       font-size: 1.3em;
       text-align: center;
       animation: fadeIn 0.7s;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
     }
     #howtoplay .icon {
       font-size: 2.4em;
@@ -183,8 +189,11 @@
     </div>
   </div>
   <script>
-    // Prevent scrolling on touch devices
+    // Prevent scrolling/zooming on touch devices
+    document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+    document.addEventListener('dblclick', function(e){ e.preventDefault(); });
     document.body.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+    document.body.addEventListener('touchstart', function(e){ if(e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
     // --- Tetris Constants ---
     const COLS = 10, ROWS = 20, BLOCK = 28;
@@ -215,6 +224,7 @@
     let piece = null, nextPiece = null;
     let touchStart = null, touchMoved = false;
     let gameStarted = false;
+    let animatingLock = false, animTimer = 0, animBlocks = [];
 
     const canvas = document.getElementById('tetris');
     const ctx = canvas.getContext('2d');
@@ -226,16 +236,27 @@
       return matrix;
     }
 
-    function drawMatrix(matrix, offset, shadow=false) {
+    function drawMatrix(matrix, offset, shadow=false, anim=false) {
       matrix.forEach((row, y) => {
         row.forEach((value, x) => {
           if (value) {
-            ctx.globalAlpha = shadow ? 0.3 : 1;
+            ctx.save();
+            if (shadow) {
+              ctx.globalAlpha = 0.3;
+            } else if (anim && animBlocks.some(b => b.x === x+offset.x && b.y === y+offset.y)) {
+              ctx.globalAlpha = 1;
+              ctx.shadowColor = COLORS[value];
+              ctx.shadowBlur = 20;
+              ctx.lineWidth = 3;
+              ctx.strokeStyle = "#fff";
+              ctx.strokeRect((x+offset.x)*BLOCK, (y+offset.y)*BLOCK, BLOCK, BLOCK);
+            }
             ctx.fillStyle = COLORS[value];
             ctx.fillRect((x+offset.x)*BLOCK, (y+offset.y)*BLOCK, BLOCK, BLOCK);
             ctx.globalAlpha = 1;
             ctx.strokeStyle = "#333";
             ctx.strokeRect((x+offset.x)*BLOCK, (y+offset.y)*BLOCK, BLOCK, BLOCK);
+            ctx.restore();
           }
         });
       });
@@ -293,31 +314,24 @@
     }
 
     function playerDrop() {
+      if (animatingLock) return;
       piece.pos.y++;
       if (collide(arena, piece)) {
         piece.pos.y--;
-        merge(arena, piece);
-        let cleared = arenaSweep();
-        if (cleared) {
-          lines += cleared;
-          score += cleared * 100 * level;
-          if (lines >= 7 * level && level < 5) {
-            level++;
-            dropInterval = Math.max(150, 800 - (level-1)*150);
-          }
-        }
-        updateScore();
-        resetPiece();
+        lockPieceWithAnim();
+      } else {
+        dropCounter = 0;
       }
-      dropCounter = 0;
     }
 
     function playerMove(dir) {
+      if (animatingLock) return;
       piece.pos.x += dir;
       if (collide(arena, piece)) piece.pos.x -= dir;
     }
 
     function playerRotate() {
+      if (animatingLock) return;
       const pos = piece.pos.x;
       let offset = 1;
       rotate(piece.matrix, 1);
@@ -333,8 +347,33 @@
     }
 
     function hardDrop() {
-      while (!collide(arena, piece)) piece.pos.y++;
+      if (animatingLock) return;
+      let moved = false;
+      while (!collide(arena, piece)) {
+        piece.pos.y++;
+        moved = true;
+      }
       piece.pos.y--;
+      if (!moved && collide(arena, piece)) {
+        // Already blocked, can't drop
+        lockPieceWithAnim();
+        return;
+      }
+      lockPieceWithAnim();
+    }
+
+    function lockPieceWithAnim() {
+      animBlocks = [];
+      piece.matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value) animBlocks.push({x: x+piece.pos.x, y: y+piece.pos.y, color: value});
+        });
+      });
+      animatingLock = true;
+      animTimer = 0;
+    }
+
+    function finishLockPiece() {
       merge(arena, piece);
       let cleared = arenaSweep();
       if (cleared) {
@@ -347,7 +386,6 @@
       }
       updateScore();
       resetPiece();
-      dropCounter = 0;
     }
 
     function arenaSweep() {
@@ -375,8 +413,14 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawMatrix(arena, {x:0, y:0});
-      if (!gameOver) drawShadow();
-      if (!gameOver) drawMatrix(piece.matrix, piece.pos);
+      if (!gameOver && piece) {
+        drawShadow();
+        if (animatingLock) {
+          drawMatrix(piece.matrix, piece.pos, false, true);
+        } else {
+          drawMatrix(piece.matrix, piece.pos);
+        }
+      }
     }
 
     function updateScore() {
@@ -393,6 +437,18 @@
       }
       const delta = time - lastTime;
       lastTime = time;
+
+      if (animatingLock) {
+        animTimer += delta;
+        draw();
+        if (animTimer > 180) { // 180ms animation
+          animatingLock = false;
+          finishLockPiece();
+        }
+        requestAnimationFrame(update);
+        return;
+      }
+
       dropCounter += delta;
       if (dropCounter > dropInterval) {
         playerDrop();
@@ -403,17 +459,17 @@
 
     // --- Touch Controls (Canvas) ---
     canvas.addEventListener('touchstart', function(e) {
-      if (!gameStarted || gameOver) return;
+      if (!gameStarted || gameOver || animatingLock) return;
       if (e.touches.length > 1) return;
       touchStart = e.touches[0];
       touchMoved = false;
     }, { passive: false });
     canvas.addEventListener('touchmove', function(e) {
-      if (!gameStarted || gameOver) return;
+      if (!gameStarted || gameOver || animatingLock) return;
       touchMoved = true;
     }, { passive: false });
     canvas.addEventListener('touchend', function(e) {
-      if (!gameStarted || gameOver) return;
+      if (!gameStarted || gameOver || animatingLock) return;
       if (!touchStart) return;
       let touchEnd = e.changedTouches[0];
       let dx = touchEnd.clientX - touchStart.clientX;
@@ -435,13 +491,13 @@
     // --- On-screen Rotate Button ---
     document.getElementById('btn-rotate').addEventListener('touchstart', function(e) {
       e.preventDefault();
-      if (!gameStarted || gameOver) return;
+      if (!gameStarted || gameOver || animatingLock) return;
       playerRotate();
     }, { passive: false });
 
     // --- Desktop fallback controls (optional) ---
     document.addEventListener('keydown', function(e) {
-      if (!gameStarted || gameOver) return;
+      if (!gameStarted || gameOver || animatingLock) return;
       if (e.key === 'ArrowLeft') playerMove(-1);
       else if (e.key === 'ArrowRight') playerMove(1);
       else if (e.key === 'ArrowUp') playerRotate();
