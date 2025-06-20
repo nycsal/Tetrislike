@@ -80,30 +80,30 @@
       height: 560px !important;
       touch-action: manipulation;
     }
-    .ctrl-btn {
+    .ctrl-btn-center {
       position: absolute;
-      z-index: 3;
-      opacity: 0.85;
-      background: #fff;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%,-50%);
+      z-index: 10;
+      opacity: 0.4;
+      background: rgba(255,255,255,0.3);
       border-radius: 50%;
-      width: 56px;
-      height: 56px;
+      width: 70px;
+      height: 70px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.2em;
+      font-size: 2.5em;
       color: #0077ff;
       border: 3px solid #0077ff;
       user-select: none;
       transition: opacity 0.2s, background 0.2s;
       box-shadow: 0 0 18px #0077ff;
       touch-action: manipulation;
-      right: -68px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: #fff;
+      pointer-events: auto;
     }
-    .ctrl-btn:active { opacity: 1; background: #e3f0ff; }
+    .ctrl-btn-center:active { opacity: 0.7; background: #e3f0ff; }
     #howtoplay {
       position: fixed;
       left: 0; top: 0; width: 100vw; height: 100vh;
@@ -138,7 +138,7 @@
       width: 100%;
       height: 100%;
       background: rgba(0,0,32,0.88);
-      z-index: 10;
+      z-index: 20;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -172,11 +172,10 @@
         min-width: 280px;
         min-height: 560px;
       }
-      .ctrl-btn {
-        width: 44px;
-        height: 44px;
-        font-size: 1.4em;
-        right: -48px;
+      .ctrl-btn-center {
+        width: 48px;
+        height: 48px;
+        font-size: 1.6em;
       }
     }
   </style>
@@ -192,8 +191,8 @@
     <div id="game">
       <canvas id="tetris" width="280" height="560"></canvas>
       <div id="levelmsg"></div>
+      <div id="btn-rotate" class="ctrl-btn-center" title="Rotate">&#8635;</div>
     </div>
-    <div id="btn-rotate" class="ctrl-btn" title="Rotate">&#8635;</div>
   </div>
   <div id="controls">
     <p>Swipe down: Drop<br>
@@ -228,6 +227,7 @@
     document.addEventListener('dblclick', function(e){ e.preventDefault(); });
     document.body.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
     document.body.addEventListener('touchstart', function(e){ if(e.touches.length > 1) e.preventDefault(); }, { passive: false });
+    document.body.addEventListener('mousedown', function(e){ e.preventDefault(); }, { passive: false });
 
     // --- Tetris Constants ---
     const COLS = 10, ROWS = 20, BLOCK = 28;
@@ -558,7 +558,7 @@
       touchStart = null;
     }, { passive: false });
 
-    // --- On-screen Rotate Button ---
+    // --- On-screen Rotate Button (centered) ---
     document.getElementById('btn-rotate').addEventListener('touchstart', function(e) {
       e.preventDefault();
       if (!gameStarted || gameOver || animatingLock) return;
@@ -603,4 +603,3 @@
   </script>
 </body>
 </html>
-
