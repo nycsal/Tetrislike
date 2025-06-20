@@ -13,6 +13,9 @@
       font-family: 'Segoe UI', Arial, sans-serif;
       overflow: hidden;
       touch-action: manipulation;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
     body {
       display: flex;
@@ -24,6 +27,8 @@
       overscroll-behavior: contain;
       -webkit-user-select: none;
       user-select: none;
+      max-width: 320px;
+      margin: 0 auto;
     }
     #scoreboard {
       width: 100%;
@@ -54,6 +59,7 @@
       justify-content: center;
       align-items: center;
       background: none;
+      touch-action: manipulation;
     }
     #game {
       background: #181818;
@@ -64,13 +70,14 @@
       height: 560px;
       position: relative;
       z-index: 1;
+      touch-action: manipulation;
     }
     canvas {
       display: block;
       background: #222;
       border-radius: 12px;
-      width: 100% !important;
-      height: 100% !important;
+      width: 280px !important;
+      height: 560px !important;
       touch-action: manipulation;
     }
     .ctrl-btn {
@@ -133,12 +140,12 @@
     }
     @media (max-width: 400px) {
       #gamebox, #game {
-        width: 98vw;
-        height: 196vw;
-        max-width: 98vw;
-        max-height: 98vw;
-        min-width: 180px;
-        min-height: 360px;
+        width: 280px;
+        height: 560px;
+        max-width: 280px;
+        max-height: 560px;
+        min-width: 280px;
+        min-height: 560px;
       }
       .ctrl-btn {
         width: 40px;
@@ -412,7 +419,6 @@
           arena.splice(y, 1);
           arena.unshift(new Array(COLS).fill(0));
           rowCount++;
-          // Do not decrement y to check new row at this index
         } else {
           y--;
         }
