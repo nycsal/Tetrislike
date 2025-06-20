@@ -82,25 +82,28 @@
     }
     .ctrl-btn {
       position: absolute;
-      z-index: 2;
-      opacity: 0.25;
+      z-index: 3;
+      opacity: 0.85;
       background: #fff;
       border-radius: 50%;
-      width: 54px;
-      height: 54px;
+      width: 56px;
+      height: 56px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2em;
-      color: #18171d;
-      border: 2px solid #0077ff;
+      font-size: 2.2em;
+      color: #0077ff;
+      border: 3px solid #0077ff;
       user-select: none;
-      transition: opacity 0.2s;
-      box-shadow: 0 0 10px #0077ff;
+      transition: opacity 0.2s, background 0.2s;
+      box-shadow: 0 0 18px #0077ff;
       touch-action: manipulation;
+      right: -68px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #fff;
     }
-    .ctrl-btn:active { opacity: 0.5; }
-    #btn-rotate { right: -60px; top: 50%; transform: translateY(-50%); }
+    .ctrl-btn:active { opacity: 1; background: #e3f0ff; }
     #howtoplay {
       position: fixed;
       left: 0; top: 0; width: 100vw; height: 100vh;
@@ -129,6 +132,28 @@
       font-size: 1.1em;
       color: #ffde59;
     }
+    #levelmsg {
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,32,0.88);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.5em;
+      font-weight: bold;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    #levelmsg.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
     #controls {
@@ -148,11 +173,11 @@
         min-height: 560px;
       }
       .ctrl-btn {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2em;
+        width: 44px;
+        height: 44px;
+        font-size: 1.4em;
+        right: -48px;
       }
-      #btn-rotate { right: -44px; }
     }
   </style>
 </head>
@@ -166,8 +191,9 @@
   <div id="gamebox">
     <div id="game">
       <canvas id="tetris" width="280" height="560"></canvas>
+      <div id="levelmsg"></div>
     </div>
-    <div id="btn-rotate" class="ctrl-btn">&#8635;</div>
+    <div id="btn-rotate" class="ctrl-btn" title="Rotate">&#8635;</div>
   </div>
   <div id="controls">
     <p>Swipe down: Drop<br>
@@ -226,15 +252,20 @@
       [[0,0],[1,0],[1,1],[2,1]]  // Z
     ];
 
+    // --- Level lines to clear
+    const levelLines = [3,4,5,6,7,8,9,999]; // for levels 1-8+
+
     // --- Game State ---
     let arena, score, lines, level, dropInterval, dropCounter, lastTime, gameOver;
     let piece, nextPiece;
     let touchStart = null, touchMoved = false;
     let gameStarted = false;
     let animatingLock = false, animTimer = 0, animBlocks = [];
+    let linesAtLevelStart = 0;
 
     const canvas = document.getElementById('tetris');
     const ctx = canvas.getContext('2d');
+    const levelMsg = document.getElementById('levelmsg');
 
     function resetGameState() {
       arena = createMatrix(COLS, ROWS);
@@ -250,6 +281,16 @@
       animatingLock = false;
       animTimer = 0;
       animBlocks = [];
+      linesAtLevelStart = 0;
+    }
+
+    function announceLevel() {
+      const linesNeeded = levelLines[level-1] || 3;
+      levelMsg.innerHTML = `Clear <span style="color:#ffde59">${linesNeeded}</span> line${linesNeeded>1?'s':''} to reach Level ${level+1}!`;
+      levelMsg.classList.add('show');
+      setTimeout(() => {
+        levelMsg.classList.remove('show');
+      }, 1800);
     }
 
     // --- Core Functions ---
@@ -399,9 +440,13 @@
       if (cleared) {
         lines += cleared;
         score += cleared * 100 * level;
-        if (lines >= 7 * level && level < 5) {
+        // Level up logic
+        const linesNeeded = levelLines[level-1] || 3;
+        if ((lines - linesAtLevelStart) >= linesNeeded) {
           level++;
-          dropInterval = Math.max(150, 800 - (level-1)*150);
+          linesAtLevelStart = lines;
+          dropInterval = Math.max(150, 800 - (level-1)*100);
+          announceLevel();
         }
       }
       updateScore();
@@ -547,6 +592,7 @@
       gameStarted = true;
       resetPiece();
       updateScore();
+      announceLevel();
       update();
     }
 
