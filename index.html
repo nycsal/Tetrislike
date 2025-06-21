@@ -492,12 +492,7 @@
       }
     }
 
-    function updateScore() {
-      document.getElementById('score').textContent = 'Score: ' + score;
-      document.getElementById('lines').textContent = 'Lines: ' + lines;
-      document.getElementById('level').textContent = 'Level: ' + level;
-    }
-
+    // --- FREEZE-PROOF GAME LOOP ---
     function update(time = 0) {
       if (!gameStarted) return;
       if (gameOver) {
@@ -507,10 +502,12 @@
       const delta = time - lastTime;
       lastTime = time;
 
+      // --- Animation Lock Handling ---
       if (animatingLock) {
         animTimer += delta;
         draw();
-        if (animTimer > 180) {
+        // Failsafe: if animation is stuck, force it to finish after 300ms
+        if (animTimer > 300) {
           animatingLock = false;
           finishLockPiece();
         } else {
@@ -519,12 +516,25 @@
         }
       }
 
+      // --- Game Logic ---
       dropCounter += delta;
       if (dropCounter > dropInterval) {
         playerDrop();
       }
       draw();
-      requestAnimationFrame(update);
+
+      // --- Failsafe: Always request next frame, even if something goes wrong ---
+      try {
+        requestAnimationFrame(update);
+      } catch (e) {
+        setTimeout(update, 100);
+      }
+    }
+
+    function updateScore() {
+      document.getElementById('score').textContent = 'Score: ' + score;
+      document.getElementById('lines').textContent = 'Lines: ' + lines;
+      document.getElementById('level').textContent = 'Level: ' + level;
     }
 
     // --- Touch Controls (Canvas) ---
@@ -603,4 +613,3 @@
   </script>
 </body>
 </html>
-
