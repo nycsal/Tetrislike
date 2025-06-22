@@ -8,7 +8,7 @@
       height: 100%;
       margin: 0;
       padding: 0;
-      background: #18171d;
+      background: #101016;
       color: #fff;
       font-family: 'Segoe UI', Arial, sans-serif;
       overflow: hidden;
@@ -62,7 +62,7 @@
       touch-action: manipulation;
     }
     #game {
-      background: #181818;
+      background: #181820;
       border: 4px solid #0077ff;
       border-radius: 16px;
       box-shadow: 0 0 24px #0077ffaa;
@@ -74,7 +74,7 @@
     }
     canvas {
       display: block;
-      background: #222;
+      background: #181820;
       border-radius: 12px;
       width: 280px !important;
       height: 560px !important;
@@ -206,13 +206,13 @@
     const COLS = 10, ROWS = 20, BLOCK = 28;
     const COLORS = [
       null,
-      "#00f0f0", // I
-      "#0000f0", // J
-      "#f0a000", // L
-      "#f0f000", // O
-      "#00f000", // S
-      "#a000f0", // T
-      "#f00000"  // Z
+      "#00ffff", // I
+      "#0000ff", // J
+      "#ff7f00", // L
+      "#ffff00", // O
+      "#00ff00", // S
+      "#800080", // T
+      "#ff0000"  // Z
     ];
     const SHAPES = [
       [],
@@ -272,7 +272,7 @@
           if (value) {
             ctx.save();
             if (ghost) {
-              ctx.globalAlpha = 0.25;
+              ctx.globalAlpha = 0.22;
               ctx.strokeStyle = COLORS[value];
               ctx.lineWidth = 2;
               ctx.strokeRect((x+offset.x)*BLOCK+2, (y+offset.y)*BLOCK+2, BLOCK-4, BLOCK-4);
@@ -292,8 +292,11 @@
     function drawGhostPiece() {
       if (!piece) return;
       let ghostY = piece.pos.y;
+      // Only move down if not already colliding!
       while (!collide(arena, {matrix: piece.matrix, pos: {x: piece.pos.x, y: ghostY+1}})) {
         ghostY++;
+        // Guard against infinite loop
+        if (ghostY > ROWS) break;
       }
       drawMatrix(piece.matrix, {x: piece.pos.x, y: ghostY}, true);
     }
@@ -407,8 +410,11 @@
 
     function hardDrop() {
       if (gameOver) return;
+      let dropped = false;
       while (!collide(arena, piece)) {
         piece.pos.y++;
+        dropped = true;
+        if (piece.pos.y > ROWS) break; // Safety: never go out of bounds
       }
       piece.pos.y--;
       merge(arena, piece);
