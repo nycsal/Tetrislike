@@ -101,9 +101,9 @@
       transition: opacity 0.2s, background 0.2s;
       box-shadow: 0 0 18px #0077ff;
       touch-action: manipulation;
-      pointer-events: auto;
+      pointer-events: none;
+      /* Now pointer-events none since tap anywhere rotates */
     }
-    .ctrl-btn-center:active { opacity: 0.7; background: #e3f0ff; }
     #howtoplay {
       position: fixed;
       left: 0; top: 0; width: 100vw; height: 100vh;
@@ -195,19 +195,22 @@
     </div>
   </div>
   <div id="controls">
-    <p>Swipe down: Drop<br>
-    Tap left/right: Move<br>
-    Tap rotate button: Rotate</p>
+    <p>
+      <b>Swipe left:</b> Move left<br>
+      <b>Swipe right:</b> Move right<br>
+      <b>Swipe down:</b> Drop<br>
+      <b>Tap anywhere:</b> Rotate
+    </p>
   </div>
   <div id="howtoplay">
     <div class="hint">How to Play</div>
     <div>
       <span class="icon">&#8592;</span>
-      <span>Tap left side: <b>Move Left</b></span>
+      <span>Swipe left: <b>Move Left</b></span>
     </div>
     <div>
       <span class="icon">&#8594;</span>
-      <span>Tap right side: <b>Move Right</b></span>
+      <span>Swipe right: <b>Move Right</b></span>
     </div>
     <div>
       <span class="icon">&#8595;</span>
@@ -215,7 +218,7 @@
     </div>
     <div>
       <span class="icon">&#8635;</span>
-      <span>Tap rotate button: <b>Rotate</b></span>
+      <span>Tap anywhere: <b>Rotate</b></span>
     </div>
     <div style="margin-top:1.2em;font-size:1em;color:#fff;opacity:0.8;">
       Tap anywhere to start
@@ -256,7 +259,7 @@
     // --- Game State ---
     let arena, score, lines, level, dropInterval, dropCounter, lastTime, gameOver;
     let piece, nextPiece;
-    let touchStart = null, touchMoved = false;
+    let touchStart = null, touchMoved = false, touchStartTime = 0;
     let gameStarted = false;
     let linesAtLevelStart = 0;
 
@@ -483,12 +486,13 @@
       requestAnimationFrame(update);
     }
 
-    // --- Touch Controls (Canvas) ---
+    // --- Touch Controls (Canvas): Swipe and Tap ---
     canvas.addEventListener('touchstart', function(e) {
       if (!gameStarted || gameOver) return;
       if (e.touches.length > 1) return;
       touchStart = e.touches[0];
       touchMoved = false;
+      touchStartTime = Date.now();
     }, { passive: false });
     canvas.addEventListener('touchmove', function(e) {
       if (!gameStarted || gameOver) return;
@@ -501,24 +505,19 @@
       let dx = touchEnd.clientX - touchStart.clientX;
       let dy = touchEnd.clientY - touchStart.clientY;
       let absDx = Math.abs(dx), absDy = Math.abs(dy);
-      let rect = canvas.getBoundingClientRect();
-      let x = touchStart.clientX - rect.left;
-      if (absDy > 40 && absDy > absDx && dy > 0) {
+      let minSwipe = 30;
+      if (absDx > absDy && absDx > minSwipe) {
+        // Horizontal swipe
+        if (dx > 0) playerMove(1); // Swipe right
+        else playerMove(-1); // Swipe left
+      } else if (absDy > absDx && absDy > minSwipe && dy > 0) {
         // Swipe down
         hardDrop();
-      } else if (!touchMoved) {
+      } else if (!touchMoved && absDx < 10 && absDy < 10) {
         // Tap
-        if (x < 100) playerMove(-1);
-        else if (x > 180) playerMove(1);
+        playerRotate();
       }
       touchStart = null;
-    }, { passive: false });
-
-    // --- On-screen Rotate Button (centered) ---
-    document.getElementById('btn-rotate').addEventListener('touchstart', function(e) {
-      e.preventDefault();
-      if (!gameStarted || gameOver) return;
-      playerRotate();
     }, { passive: false });
 
     // --- Desktop fallback controls (optional) ---
