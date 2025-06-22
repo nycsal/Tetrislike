@@ -212,7 +212,7 @@
       "#ffff00", // O
       "#00ff00", // S
       "#800080", // T
-      "#ff0000"  // Z
+      "#ff0000"  // Z (was pink, now red)
     ];
     const SHAPES = [
       [],
@@ -292,10 +292,8 @@
     function drawGhostPiece() {
       if (!piece) return;
       let ghostY = piece.pos.y;
-      // Only move down if not already colliding!
       while (!collide(arena, {matrix: piece.matrix, pos: {x: piece.pos.x, y: ghostY+1}})) {
         ghostY++;
-        // Guard against infinite loop
         if (ghostY > ROWS) break;
       }
       drawMatrix(piece.matrix, {x: piece.pos.x, y: ghostY}, true);
@@ -382,6 +380,7 @@
         }
         updateScore();
         resetPiece();
+        lastTime = performance.now(); // <--- Ensure timing is reset so next block falls!
       }
       dropCounter = 0;
     }
@@ -414,7 +413,7 @@
       while (!collide(arena, piece)) {
         piece.pos.y++;
         dropped = true;
-        if (piece.pos.y > ROWS) break; // Safety: never go out of bounds
+        if (piece.pos.y > ROWS) break;
       }
       piece.pos.y--;
       merge(arena, piece);
@@ -433,6 +432,7 @@
       updateScore();
       resetPiece();
       dropCounter = 0;
+      lastTime = performance.now(); // <--- Ensure timing is reset so next block falls!
     }
 
     function arenaSweep() {
@@ -544,6 +544,7 @@
       resetPiece();
       updateScore();
       announceLevel();
+      lastTime = performance.now();
       update();
     }
 
