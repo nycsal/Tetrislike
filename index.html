@@ -222,6 +222,15 @@
     </div>
   </div>
   <script>
+    // --- Watchdog to keep game alive ---
+    let lastFrameTime = Date.now();
+    setInterval(function(){
+      if(gameStarted && !gameOver && Date.now() - lastFrameTime > 1500){
+        // If no frame drawn in 1.5s, force update
+        update(performance.now());
+      }
+    }, 1000);
+
     // Prevent scrolling/zooming on touch devices
     document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
     document.addEventListener('dblclick', function(e){ e.preventDefault(); });
@@ -327,18 +336,28 @@
     }
 
     function merge(arena, piece) {
+      if (!arena || !piece || !piece.matrix) return;
       piece.matrix.forEach((row, y) => {
         row.forEach((value, x) => {
-          if (value) arena[y + piece.pos.y][x + piece.pos.x] = value;
+          if (value && arena[y + piece.pos.y] && arena[y + piece.pos.y][x + piece.pos.x] !== undefined) {
+            arena[y + piece.pos.y][x + piece.pos.x] = value;
+          }
         });
       });
     }
 
     function collide(arena, piece) {
+      if (!arena || !piece || !piece.matrix) return true;
       const [m, o] = [piece.matrix, piece.pos];
       for (let y = 0; y < m.length; ++y) {
         for (let x = 0; x < m[y].length; ++x) {
-          if (m[y][x] && (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0) {
+          if (m[y][x] && (
+            !arena[y + o.y] ||
+            arena[y + o.y][x + o.x] !== 0 ||
+            (x + o.x) < 0 ||
+            (x + o.x) >= COLS ||
+            (y + o.y) >= ROWS
+          )) {
             return true;
           }
         }
@@ -490,44 +509,48 @@
           drawMatrix(piece.matrix, piece.pos);
         }
       }
+      lastFrameTime = Date.now();
     }
 
     // --- FREEZE-PROOF GAME LOOP ---
     function update(time = 0) {
-      if (!gameStarted) return;
-      if (gameOver) {
-        draw();
-        return;
-      }
-      const delta = time - lastTime;
-      lastTime = time;
-
-      // --- Animation Lock Handling ---
-      if (animatingLock) {
-        animTimer += delta;
-        draw();
-        // Failsafe: if animation is stuck, force it to finish after 300ms
-        if (animTimer > 300) {
-          animatingLock = false;
-          finishLockPiece();
-        } else {
-          requestAnimationFrame(update);
+      try {
+        if (!gameStarted) return;
+        if (gameOver) {
+          draw();
           return;
         }
-      }
+        const delta = time - lastTime;
+        lastTime = time;
 
-      // --- Game Logic ---
-      dropCounter += delta;
-      if (dropCounter > dropInterval) {
-        playerDrop();
-      }
-      draw();
+        // --- Animation Lock Handling ---
+        if (animatingLock) {
+          animTimer += delta;
+          draw();
+          // Failsafe: if animation is stuck, force it to finish after 300ms
+          if (animTimer > 300) {
+            animatingLock = false;
+            finishLockPiece();
+          } else {
+            requestAnimationFrame(update);
+            return;
+          }
+        }
 
-      // --- Failsafe: Always request next frame, even if something goes wrong ---
-      try {
+        // --- Game Logic ---
+        dropCounter += delta;
+        if (dropCounter > dropInterval) {
+          playerDrop();
+        }
+        draw();
+
+        // --- Failsafe: Always request next frame, even if something goes wrong ---
         requestAnimationFrame(update);
-      } catch (e) {
-        setTimeout(update, 100);
+      } catch (err) {
+        // If something goes wrong, show error
+        document.getElementById('score').textContent = 'ERROR';
+        console.error('Game crashed:', err);
+        setTimeout(update, 200);
       }
     }
 
