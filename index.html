@@ -124,7 +124,7 @@
       text-align: center;
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.5s;
+      transition: opacity 极速5s;
     }
     #levelmsg.show {
       opacity: 1;
@@ -166,8 +166,7 @@
   </div>
   <div id="controls">
     <p>
-      <b>Swipe left:</b> Move left<br>
-      <b>Swipe right:</b> Move right<br>
+      <b>Drag left/right:</b> Move block<br>
       <b>Swipe down:</b> Drop<br>
       <b>Tap:</b> Rotate
     </p>
@@ -176,11 +175,7 @@
     <div class="hint">How to Play</div>
     <div>
       <span class="icon">&#8592;</span>
-      <span>Swipe left: <b>Move Left</b></span>
-    </div>
-    <div>
-      <span class="icon">&#8594;</span>
-      <span>Swipe right: <b>Move Right</b></span>
+      <span>Drag left/right: <b>Move block</b></span>
     </div>
     <div>
       <span class="icon">&#8595;</span>
@@ -212,11 +207,11 @@
       "#ffff00", // O
       "#00ff00", // S
       "#800080", // T
-      "#ff0000"  // Z (was pink, now red)
+      "#ff0000"  // Z (red)
     ];
     const SHAPES = [
       [],
-      [[0,1],[1,1],[2,1],[3,1]], // I
+      [[0,1],[1,1],[2,极速1],[3,1]], // I
       [[0,0],[0,1],[1,1],[2,1]], // J
       [[2,0],[0,1],[1,1],[2,1]], // L
       [[1,0],[2,0],[1,1],[2,1]], // O
@@ -229,7 +224,7 @@
     // --- Game State ---
     let arena, score, lines, level, dropInterval, dropCounter, lastTime, gameOver;
     let piece, nextPiece;
-    let touchStart = null, touchMoved = false, touchStartTime = 0;
+    let touchStart = null, touchMoved = false, touchStartTime = 0, lastTouchX = 0;
     let gameStarted = false;
     let linesAtLevelStart = 0;
 
@@ -249,6 +244,7 @@
       piece = null;
       nextPiece = null;
       linesAtLevelStart = 0;
+      lastTouchX = 0;
     }
 
     function announceLevel() {
@@ -281,7 +277,7 @@
               ctx.fillStyle = COLORS[value];
               ctx.fillRect((x+offset.x)*BLOCK, (y+offset.y)*BLOCK, BLOCK, BLOCK);
               ctx.strokeStyle = "#333";
-              ctx.strokeRect((x+offset.x)*BLOCK, (y+offset.y)*BLOCK, BLOCK, BLOCK);
+              ctx.strokeRect((x+offset极速.x)*BLOCK, (y+offset.y)*BLOCK, BLOCK, BLOCK);
             }
             ctx.restore();
           }
@@ -371,7 +367,7 @@
           lines += cleared;
           score += cleared * 100 * level;
           const linesNeeded = levelLines[level-1] || 3;
-          if ((lines - linesAtLevelStart) >= linesNeeded) {
+          if ((lines - linesAtLevelStart) >= lines极速Needed) {
             level++;
             linesAtLevelStart = lines;
             dropInterval = Math.max(150, 800 - (level-1)*100);
@@ -482,38 +478,46 @@
       requestAnimationFrame(update);
     }
 
-    // --- Touch Controls (Canvas): Swipe and Tap ---
+    // --- Touch Controls (Canvas): Drag left/right, swipe down to drop, tap to rotate ---
     canvas.addEventListener('touchstart', function(e) {
       if (!gameStarted || gameOver) return;
       if (e.touches.length > 1) return;
       touchStart = e.touches[0];
       touchMoved = false;
       touchStartTime = Date.now();
+      lastTouchX = touchStart.clientX;
     }, { passive: false });
+
     canvas.addEventListener('touchmove', function(e) {
       if (!gameStarted || gameOver) return;
+      if (!touchStart) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - lastTouchX;
+      const minMove = 8; // Minimum pixels to move before adjusting piece
+      if (Math.abs(dx) > minMove) {
+        const dir = dx > 0 ? 1 : -1;
+        playerMove(dir);
+        lastTouchX = touch.clientX;
+      }
       touchMoved = true;
     }, { passive: false });
+
     canvas.addEventListener('touchend', function(e) {
       if (!gameStarted || gameOver) return;
       if (!touchStart) return;
-      let touchEnd = e.changedTouches[0];
-      let dx = touchEnd.clientX - touchStart.clientX;
-      let dy = touchEnd.clientY - touchStart.clientY;
-      let absDx = Math.abs(dx), absDy = Math.abs(dy);
-      let minSwipe = 30;
-      if (absDx > absDy && absDx > minSwipe) {
-        // Horizontal swipe
-        if (dx > 0) playerMove(1); // Swipe right
-        else playerMove(-1); // Swipe left
-      } else if (absDy > absDx && absDy > minSwipe && dy > 0) {
+      const touchEnd = e.changedTouches[0];
+      const dy = touchEnd.clientY - touchStart.clientY;
+      const absDy = Math.abs(dy);
+      const minSwipe = 40;
+      if (absDy > minSwipe && dy > 0) {
         // Swipe down
         hardDrop();
-      } else if (!touchMoved && absDx < 10 && absDy < 10) {
+      } else if (!touchMoved) {
         // Tap
         playerRotate();
       }
       touchStart = null;
+      lastTouchX = 0;
     }, { passive: false });
 
     // --- Desktop fallback controls (optional) ---
