@@ -33,22 +33,39 @@
     #scoreboard {
       width: 100%;
       text-align: center;
-      font-size: 1.7em;
+      font-size: 1.5em;
       margin: 0.5em 0 0.2em 0;
       letter-spacing: 2px;
       font-weight: bold;
-      color: #ffde59;
-      text-shadow: 1px 1px 4px #000;
+      color: #fff;
+      background: linear-gradient(90deg, #0077ff 0%, #00e0ff 100%);
+      border-radius: 18px;
+      box-shadow: 0 4px 22px #0077ff44;
+      padding: 0.4em 0 0.3em 0;
+      text-shadow: 0 2px 12px #000, 0 0 8px #00e0ff77;
+      position: relative;
       z-index: 2;
+      border: 2px solid #00e0ff;
     }
     #kakabanner {
-      font-size: 2.2em;
-      font-family: 'Segoe UI', 'Arial', sans-serif;
+      font-size: 2.1em;
+      font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
       font-weight: bold;
-      color: #0077ff;
-      margin-bottom: 0.2em;
-      letter-spacing: 3px;
-      text-shadow: 2px 2px 8px #000;
+      color: #fff;
+      letter-spacing: 4px;
+      text-shadow: 0 2px 16px #00e0ff, 0 0 8px #0077ff;
+      margin-bottom: 0.18em;
+      background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #scoreboard span {
+      font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+      font-size: 1.05em;
+      color: #fff;
+      margin: 0 0.2em;
+      text-shadow: 0 1px 6px #0077ff99;
     }
     #gamebox {
       position: relative;
@@ -130,6 +147,49 @@
       opacity: 1;
       pointer-events: auto;
     }
+    #gameover {
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(10,10,30,0.93);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+      color: #fff;
+      font-size: 2em;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-shadow: 0 0 16px #0077ff, 0 0 8px #00e0ff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+    #gameover.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #restartBtn {
+      margin-top: 1.2em;
+      font-size: 1.1em;
+      background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 0.5em 2.5em;
+      font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+      font-weight: bold;
+      letter-spacing: 2px;
+      box-shadow: 0 2px 16px #0077ff88;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    #restartBtn:active {
+      background: linear-gradient(90deg, #0077ff 10%, #00e0ff 90%);
+      box-shadow: 0 2px 24px #00e0ffcc;
+    }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
     #controls {
@@ -162,6 +222,10 @@
     <div id="game">
       <canvas id="tetris" width="280" height="560"></canvas>
       <div id="levelmsg"></div>
+      <div id="gameover">
+        <div>GAME OVER</div>
+        <button id="restartBtn">RESTART</button>
+      </div>
     </div>
   </div>
   <div id="controls">
@@ -235,6 +299,8 @@
     const canvas = document.getElementById('tetris');
     const ctx = canvas.getContext('2d');
     const levelMsg = document.getElementById('levelmsg');
+    const gameoverDiv = document.getElementById('gameover');
+    const restartBtn = document.getElementById('restartBtn');
 
     function resetGameState() {
       arena = createMatrix(COLS, ROWS);
@@ -250,6 +316,7 @@
       linesAtLevelStart = 0;
       lastTouchX = 0;
       dragMode = false;
+      gameoverDiv.classList.remove('show');
     }
 
     function announceLevel() {
@@ -357,7 +424,7 @@
       nextPiece = types[Math.floor(Math.random()*7)];
       if (collide(arena, piece)) {
         gameOver = true;
-        document.getElementById('score').textContent = 'GAME OVER';
+        showGameOver();
       }
     }
 
@@ -381,7 +448,7 @@
         }
         updateScore();
         resetPiece();
-        lastTime = performance.now(); // <--- always reset timer!
+        lastTime = performance.now();
       }
       dropCounter = 0;
     }
@@ -431,7 +498,7 @@
       updateScore();
       resetPiece();
       dropCounter = 0;
-      lastTime = performance.now(); // <--- always reset timer!
+      lastTime = performance.now();
     }
 
     function arenaSweep() {
@@ -539,6 +606,15 @@
       else if (e.key === 'ArrowDown') hardDrop();
     });
 
+    // --- Game Over Overlay ---
+    function showGameOver() {
+      gameoverDiv.classList.add('show');
+    }
+    restartBtn.addEventListener('click', function() {
+      gameoverDiv.classList.remove('show');
+      startGame();
+    });
+
     // --- How to Play Animation Overlay ---
     function hideHowToPlay() {
       let htp = document.getElementById('howtoplay');
@@ -556,7 +632,6 @@
     });
 
     function startGame() {
-      if (gameStarted) return;
       resetGameState();
       gameStarted = true;
       resetPiece();
