@@ -309,7 +309,7 @@
       level = 1;
       dropInterval = 800;
       dropCounter = 0;
-      lastTime = 0;
+      lastTime = performance.now();
       gameOver = false;
       piece = null;
       nextPiece = null;
@@ -426,6 +426,9 @@
         gameOver = true;
         showGameOver();
       }
+      // --- CRUCIAL: Reset timers so drop always resumes ---
+      dropCounter = 0;
+      lastTime = performance.now();
     }
 
     function playerDrop() {
@@ -448,7 +451,6 @@
         }
         updateScore();
         resetPiece();
-        lastTime = performance.now();
       }
       dropCounter = 0;
     }
@@ -497,8 +499,6 @@
       }
       updateScore();
       resetPiece();
-      dropCounter = 0;
-      lastTime = performance.now();
     }
 
     function arenaSweep() {
