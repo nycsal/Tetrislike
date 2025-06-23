@@ -4,150 +4,40 @@
   <meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KaKaTris</title>
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background: #101016;
-      color: #fff;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      overflow: hidden;
-      touch-action: manipulation;
-      -webkit-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-      text-size-adjust: 100%;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      height: 100vh;
-      width: 100vw;
-      overscroll-behavior: contain;
-      -webkit-user-select: none;
-      user-select: none;
-      max-width: 320px;
-      margin: 0 auto;
-    }
-    #scoreboard {
-      width: 100%;
-      text-align: center;
-      font-size: 1.7em;
-      margin: 0.5em 0 0.2em 0;
-      letter-spacing: 2px;
-      font-weight: bold;
-      color: #ffde59;
-      text-shadow: 1px 1px 4px #000;
-      z-index: 2;
-    }
-    #kakabanner {
-      font-size: 2.2em;
-      font-family: 'Segoe UI', 'Arial', sans-serif;
-      font-weight: bold;
-      color: #0077ff;
-      margin-bottom: 0.2em;
-      letter-spacing: 3px;
-      text-shadow: 2px 2px 8px #000;
-    }
-    #gamebox {
-      position: relative;
-      width: 280px;
-      height: 560px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: none;
-      touch-action: manipulation;
-    }
-    #game {
-      background: #181820;
-      border: 4px solid #0077ff;
-      border-radius: 16px;
-      box-shadow: 0 0 24px #0077ffaa;
-      width: 280px;
-      height: 560px;
-      position: relative;
-      z-index: 1;
-      touch-action: manipulation;
-    }
-    canvas {
-      display: block;
-      background: #181820;
-      border-radius: 12px;
-      width: 280px !important;
-      height: 560px !important;
-      touch-action: manipulation;
-    }
-    #howtoplay {
-      position: fixed;
-      left: 0; top: 0; width: 100vw; height: 100vh;
-      background: rgba(20,16,32,0.92);
-      z-index: 99;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      color: #fff;
-      font-size: 1.3em;
-      text-align: center;
-      animation: fadeIn 0.7s;
-      -webkit-user-select: none;
-      user-select: none;
-      touch-action: manipulation;
-    }
-    #howtoplay .icon {
-      font-size: 2.4em;
-      margin: 0.3em;
-      color: #ffde59;
-      text-shadow: 0 0 8px #0077ff;
-    }
-    #howtoplay .hint {
-      margin: 0.6em 0 0.2em 0;
-      font-size: 1.1em;
-      color: #ffde59;
-    }
-    #levelmsg {
-      position: absolute;
-      left: 0; top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,32,0.88);
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 1.5em;
-      font-weight: bold;
-      text-align: center;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.5s;
-    }
-    #levelmsg.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    html, body { height: 100%; margin: 0; padding: 0; background: #101016; color: #fff;
+      font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; touch-action: manipulation;
+      -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      height: 100vh; width: 100vw; overscroll-behavior: contain; -webkit-user-select: none;
+      user-select: none; max-width: 320px; margin: 0 auto; }
+    #scoreboard { width: 100%; text-align: center; font-size: 1.7em; margin: 0.5em 0 0.2em 0;
+      letter-spacing: 2px; font-weight: bold; color: #ffde59; text-shadow: 1px 1px 4px #000; z-index: 2; }
+    #kakabanner { font-size: 2.2em; font-family: 'Segoe UI', 'Arial', sans-serif; font-weight: bold;
+      color: #0077ff; margin-bottom: 0.2em; letter-spacing: 3px; text-shadow: 2px 2px 8px #000; }
+    #gamebox { position: relative; width: 280px; height: 560px; margin: 0 auto; display: flex;
+      justify-content: center; align-items: center; background: none; touch-action: manipulation; }
+    #game { background: #181820; border: 4px solid #0077ff; border-radius: 16px;
+      box-shadow: 0 0 24px #0077ffaa; width: 280px; height: 560px; position: relative; z-index: 1;
+      touch-action: manipulation; }
+    canvas { display: block; background: #181820; border-radius: 12px; width: 280px !important;
+      height: 560px !important; touch-action: manipulation; }
+    #howtoplay { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+      background: rgba(20,16,32,0.92); z-index: 99; display: flex; align-items: center;
+      justify-content: center; flex-direction: column; color: #fff; font-size: 1.3em; text-align: center;
+      animation: fadeIn 0.7s; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+    #howtoplay .icon { font-size: 2.4em; margin: 0.3em; color: #ffde59; text-shadow: 0 0 8px #0077ff; }
+    #howtoplay .hint { margin: 0.6em 0 0.2em 0; font-size: 1.1em; color: #ffde59; }
+    #levelmsg { position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+      background: rgba(0,0,32,0.88); z-index: 20; display: flex; align-items: center;
+      justify-content: center; color: #fff; font-size: 1.5em; font-weight: bold; text-align: center;
+      pointer-events: none; opacity: 0; transition: opacity 0.5s; }
+    #levelmsg.show { opacity: 1; pointer-events: auto; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-    #controls {
-      margin-top: 0.7em;
-      color: #aaa;
-      font-size: 1em;
-      text-align: center;
-      user-select: none;
-    }
+    #controls { margin-top: 0.7em; color: #aaa; font-size: 1em; text-align: center; user-select: none; }
     @media (max-width: 400px) {
-      #gamebox, #game {
-        width: 280px;
-        height: 560px;
-        max-width: 280px;
-        max-height: 560px;
-        min-width: 280px;
-        min-height: 560px;
-      }
+      #gamebox, #game { width: 280px; height: 560px; max-width: 280px; max-height: 560px;
+        min-width: 280px; min-height: 560px; }
     }
   </style>
 </head>
@@ -201,7 +91,6 @@
     document.body.addEventListener('touchstart', function(e){ if(e.touches.length > 1) e.preventDefault(); }, { passive: false });
     document.body.addEventListener('mousedown', function(e){ e.preventDefault(); }, { passive: false });
 
-    // --- Tetris Constants ---
     const COLS = 10, ROWS = 20, BLOCK = 28;
     const COLORS = [
       null,
@@ -225,7 +114,6 @@
     ];
     const levelLines = [3,4,5,6,7,8,9,999];
 
-    // --- Game State ---
     let arena, score, lines, level, dropInterval, dropCounter, lastTime, gameOver;
     let piece, nextPiece;
     let touchStart = null, touchMoved = false, touchStartTime = 0, lastTouchX = 0;
@@ -380,7 +268,7 @@
         }
         updateScore();
         resetPiece();
-        lastTime = performance.now();
+        lastTime = performance.now(); // <--- THIS LINE KEEPS BLOCKS FALLING
       }
       dropCounter = 0;
     }
@@ -409,10 +297,8 @@
 
     function hardDrop() {
       if (gameOver) return;
-      let dropped = false;
       while (!collide(arena, piece)) {
         piece.pos.y++;
-        dropped = true;
         if (piece.pos.y > ROWS) break;
       }
       piece.pos.y--;
@@ -432,7 +318,7 @@
       updateScore();
       resetPiece();
       dropCounter = 0;
-      lastTime = performance.now();
+      lastTime = performance.now(); // <--- THIS LINE KEEPS BLOCKS FALLING
     }
 
     function arenaSweep() {
@@ -531,7 +417,6 @@
       else if (e.key === 'ArrowDown') hardDrop();
     });
 
-    // How to Play Overlay
     function hideHowToPlay() {
       let htp = document.getElementById('howtoplay');
       htp.style.animation = 'fadeOut 0.5s';
@@ -558,7 +443,6 @@
       update();
     }
 
-    // Initialize game
     resetGameState();
     draw();
   </script>
