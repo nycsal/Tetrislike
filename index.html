@@ -31,10 +31,10 @@
       margin: 0 auto;
     }
     #scoreboard {
-      width: 100%;
+      width: 240px; /* Reduced from 100% to 240px (approx. 1/2 inch less) */
       text-align: center;
       font-size: 1.5em;
-      margin: 0.5em 0 0.2em 0;
+      margin: 0.5em auto 0.2em auto;
       letter-spacing: 2px;
       font-weight: bold;
       color: #fff;
@@ -500,14 +500,18 @@
       if (collide(arena, piece)) {
         gameOver = true;
         showGameOver();
+        return;
       }
-      // --- CRUCIAL: Reset timers so drop always resumes ---
-      dropCounter = 0;
-      lastTime = performance.now();
+      // Always keep the loop running unless game is over or paused
+      if (!levelPaused && !gameOver) {
+        dropCounter = 0;
+        lastTime = performance.now();
+        requestAnimationFrame(update);
+      }
     }
 
     function playerDrop() {
-      if (gameOver) return;
+      if (gameOver || levelPaused) return;
       piece.pos.y++;
       if (collide(arena, piece)) {
         piece.pos.y--;
@@ -527,18 +531,21 @@
         }
         updateScore();
         resetPiece();
+        return; // Prevent double drop
       }
       dropCounter = 0;
+      requestAnimationFrame(update);
     }
 
     function playerMove(dir) {
-      if (gameOver) return;
+      if (gameOver || levelPaused) return;
       piece.pos.x += dir;
       if (collide(arena, piece)) piece.pos.x -= dir;
+      requestAnimationFrame(update);
     }
 
     function playerRotate() {
-      if (gameOver) return;
+      if (gameOver || levelPaused) return;
       const pos = piece.pos.x;
       let offset = 1;
       rotate(piece.matrix, 1);
@@ -551,10 +558,11 @@
           return;
         }
       }
+      requestAnimationFrame(update);
     }
 
     function hardDrop() {
-      if (gameOver) return;
+      if (gameOver || levelPaused) return;
       while (!collide(arena, piece)) {
         piece.pos.y++;
         if (piece.pos.y > ROWS) break;
