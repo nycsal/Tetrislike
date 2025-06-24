@@ -31,24 +31,28 @@
       margin: 0 auto;
     }
     #scoreboard {
-      width: 240px; /* Reduced from 100% to 240px (approx. 1/2 inch less) */
+      width: 100%;
       text-align: center;
-      font-size: 1.5em;
-      margin: 0.5em auto 0.2em auto;
+      font-size: 1.25em; /* Reduced font size for less height */
+      margin: 0.2em 0 0.1em 0;
       letter-spacing: 2px;
       font-weight: bold;
       color: #fff;
       background: linear-gradient(90deg, #0077ff 0%, #00e0ff 100%);
       border-radius: 18px;
       box-shadow: 0 4px 22px #0077ff44;
-      padding: 0.4em 0 0.3em 0;
+      padding: 0.15em 0 0.1em 0; /* Reduced padding for less height */
       text-shadow: 0 2px 12px #000, 0 0 8px #00e0ff77;
       position: relative;
       z-index: 2;
       border: 2px solid #00e0ff;
+      min-height: 32px;
+      max-height: 38px;
+      height: 2.1em; /* About 1/2 inch on most screens */
+      box-sizing: border-box;
     }
     #kakabanner {
-      font-size: 2.5em;
+      font-size: 2em;
       font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
       font-weight: 900;
       color: #fff;
@@ -58,21 +62,23 @@
         0 0 8px #0077ff,
         2px 2px 0 #222,
         0 0 2px #fff;
-      margin-bottom: 0.18em;
+      margin-bottom: 0.05em;
       background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
       border-radius: 8px;
       border: 2px solid #00e0ff;
-      padding: 0.05em 0.2em;
+      padding: 0.02em 0.2em;
       filter: drop-shadow(0 0 4px #00e0ffcc);
+      line-height: 1.1;
+      display: inline-block;
     }
     #scoreboard span {
       font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
-      font-size: 1.05em;
+      font-size: 1em;
       color: #fff;
-      margin: 0 0.2em;
+      margin: 0 0.1em;
       text-shadow: 0 1px 6px #0077ff99;
     }
     #gamebox {
@@ -325,6 +331,7 @@
     let gameStarted = false;
     let linesAtLevelStart = 0;
     let levelPaused = false;
+    let animationFrameId = null;
 
     const canvas = document.getElementById('tetris');
     const ctx = canvas.getContext('2d');
@@ -341,7 +348,8 @@
         btn.onclick = () => {
           levelPaused = false;
           levelMsg.classList.remove('show');
-          requestAnimationFrame(update);
+          hideContinueBtn();
+          resumeGameLoop();
         };
         levelMsg.appendChild(btn);
       }
@@ -368,6 +376,8 @@
       gameoverDiv.classList.remove('show');
       levelPaused = false;
       hideContinueBtn();
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
     }
 
     function announceLevel() {
@@ -404,27 +414,46 @@
       ctx.restore();
     }
 
+    // Improved block rendering: no harsh lines, slight bevel effect
+    function drawBlock(x, y, color) {
+      const grad = ctx.createLinearGradient(
+        x * BLOCK, y * BLOCK, (x + 1) * BLOCK, (y + 1) * BLOCK
+      );
+      grad.addColorStop(0, "#fff8");
+      grad.addColorStop(0.3, color);
+      grad.addColorStop(1, "#222c");
+      ctx.fillStyle = grad;
+      ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
+
+      // Soft highlight
+      ctx.save();
+      ctx.globalAlpha = 0.18;
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.moveTo(x * BLOCK + 2, y * BLOCK + 2);
+      ctx.lineTo((x + 1) * BLOCK - 2, y * BLOCK + 2);
+      ctx.lineTo((x + 1) * BLOCK - 6, y * BLOCK + 6);
+      ctx.lineTo(x * BLOCK + 6, y * BLOCK + 6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
     function drawMatrix(matrix, offset, ghost=false) {
       matrix.forEach((row, y) => {
         row.forEach((value, x) => {
           if (value) {
             ctx.save();
             if (ghost) {
-              ctx.globalAlpha = 0.28;
+              ctx.globalAlpha = 0.18;
               ctx.strokeStyle = COLORS[value];
-              ctx.lineWidth = 3;
-              ctx.setLineDash([4, 3]);
+              ctx.lineWidth = 4;
+              ctx.setLineDash([5, 4]);
               ctx.strokeRect((x+offset.x)*BLOCK+2, (y+offset.y)*BLOCK+2, BLOCK-4, BLOCK-4);
               ctx.setLineDash([]);
             } else {
               ctx.globalAlpha = 1;
-              ctx.fillStyle = COLORS[value];
-              ctx.fillRect((x+offset.x)*BLOCK, (y+offset.y)*BLOCK, BLOCK, BLOCK);
-              ctx.strokeStyle = "#222";
-              ctx.lineWidth = 2;
-              ctx.strokeRect((x+offset.x)*BLOCK+1, (y+offset.y)*BLOCK+1, BLOCK-2, BLOCK-2);
-              ctx.shadowColor = COLORS[value] + "cc";
-              ctx.shadowBlur = 8;
+              drawBlock(x + offset.x, y + offset.y, COLORS[value]);
             }
             ctx.restore();
           }
@@ -500,14 +529,11 @@
       if (collide(arena, piece)) {
         gameOver = true;
         showGameOver();
+        stopGameLoop();
         return;
       }
-      // Always keep the loop running unless game is over or paused
-      if (!levelPaused && !gameOver) {
-        dropCounter = 0;
-        lastTime = performance.now();
-        requestAnimationFrame(update);
-      }
+      dropCounter = 0;
+      lastTime = performance.now();
     }
 
     function playerDrop() {
@@ -526,22 +552,21 @@
             linesAtLevelStart = lines;
             dropInterval = Math.max(150, 800 - (level-1)*100);
             announceLevel();
+            stopGameLoop();
+            updateScore();
             return; // Pause for continue
           }
         }
         updateScore();
         resetPiece();
-        return; // Prevent double drop
       }
       dropCounter = 0;
-      requestAnimationFrame(update);
     }
 
     function playerMove(dir) {
       if (gameOver || levelPaused) return;
       piece.pos.x += dir;
       if (collide(arena, piece)) piece.pos.x -= dir;
-      requestAnimationFrame(update);
     }
 
     function playerRotate() {
@@ -558,7 +583,6 @@
           return;
         }
       }
-      requestAnimationFrame(update);
     }
 
     function hardDrop() {
@@ -579,6 +603,8 @@
           linesAtLevelStart = lines;
           dropInterval = Math.max(150, 800 - (level-1)*100);
           announceLevel();
+          stopGameLoop();
+          updateScore();
           return; // Pause for continue
         }
       }
@@ -619,11 +645,7 @@
 
     function update(time = 0) {
       if (!gameStarted) return;
-      if (gameOver) {
-        draw();
-        return;
-      }
-      if (levelPaused) {
+      if (gameOver || levelPaused) {
         draw();
         return;
       }
@@ -635,7 +657,20 @@
         playerDrop();
       }
       draw();
-      requestAnimationFrame(update);
+      animationFrameId = requestAnimationFrame(update);
+    }
+
+    function stopGameLoop() {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    }
+    function resumeGameLoop() {
+      if (!animationFrameId && !gameOver && !levelPaused) {
+        lastTime = performance.now();
+        animationFrameId = requestAnimationFrame(update);
+      }
     }
 
     // --- Touch Controls: Drag left/right, swipe down to drop, tap to rotate ---
@@ -685,15 +720,16 @@
       touchStart = null;
       lastTouchX = 0;
       dragMode = false;
+      resumeGameLoop();
     }, { passive: false });
 
     // --- Desktop fallback controls (optional) ---
     document.addEventListener('keydown', function(e) {
       if (!gameStarted || gameOver || levelPaused) return;
-      if (e.key === 'ArrowLeft') playerMove(-1);
-      else if (e.key === 'ArrowRight') playerMove(1);
-      else if (e.key === 'ArrowUp') playerRotate();
-      else if (e.key === 'ArrowDown') hardDrop();
+      if (e.key === 'ArrowLeft') { playerMove(-1); resumeGameLoop(); }
+      else if (e.key === 'ArrowRight') { playerMove(1); resumeGameLoop(); }
+      else if (e.key === 'ArrowUp') { playerRotate(); resumeGameLoop(); }
+      else if (e.key === 'ArrowDown') { hardDrop(); resumeGameLoop(); }
     });
 
     // --- Game Over Overlay ---
@@ -728,7 +764,7 @@
       updateScore();
       announceLevel();
       lastTime = performance.now();
-      requestAnimationFrame(update);
+      resumeGameLoop();
     }
 
     // --- Start paused, show how to play ---
