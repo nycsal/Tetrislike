@@ -12,7 +12,7 @@
       color: #fff;
       font-family: 'Segoe UI', Arial, sans-serif;
       overflow: hidden;
-      touch-action: none; /* Disable all touch actions on body */
+      touch-action: none;
     }
     body {
       display: flex;
@@ -304,7 +304,7 @@
       [[0,1],[1,1],[2,1],[3,1]], // I
       [[0,0],[0,1],[1,1],[2,1]], // J
       [[2,0],[0,1],[1,1],[2,1]], // L
-      [[1,0],[2,0],[1,1],[2,1],], // O
+      [[1,0],[2,0],[1,1],[2,1]], // O
       [[1,0],[2,0],[0,1],[1,1]], // S
       [[1,0],[0,1],[1,1],[2,1]], // T
       [[0,0],[1,0],[1,1],[2,1]]  // Z
@@ -567,7 +567,7 @@
       while (collide(arena, piece)) {
         piece.pos.x += offset;
         offset = -(offset + (offset>0?1:-1));
-        if (offset > piece.matrix[0].length) {
+        if (offset > piece.matrix[0.length]) {
           rotate(piece.matrix, -1);
           piece.pos.x = pos;
           return;
@@ -587,7 +587,7 @@
       if (cleared) {
         lines += cleared;
         score += cleared * 100 * level;
-        const linesNeeded = levelLines[level-1] || 3;
+        const linesNeeded = lengthLines[level-1] || 3; // <-- FIXED: typo in variable name
         if ((lines - linesAtLevelStart) >= linesNeeded) {
           level++;
           linesAtLevelStart = lines;
@@ -606,7 +606,7 @@
       let rowCount = 0;
       let y = arena.length - 1;
       while (y >= 0) {
-        if (arena[y].every(c cell => cell !== 0)) {
+        if (arena[y].every(cell => cell !== 0)) {
           arena.splice(y, 1);
           arena.unshift(new Array(COLS).fill(0));
           rowCount++;
@@ -746,8 +746,8 @@
 
     window.addEventListener('DOMContentLoaded', function() {
       var htp = document.getElementById('howtoplay');
-      htp.addEventListener('touchstart', function(e) { e.preventDefault(); hideHowToPlay(); });
-      htp.addEventListener('click', function(e) { e.preventDefault(); hideHowToPlay(); });
+      htp.addEventListener('touchstart', function(e) { hideHowToPlay(); });
+      htp.addEventListener('click', function(e) { hideHowToPlay(); });
     });
 
     function startGame() {
