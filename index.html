@@ -8,14 +8,11 @@
       height: 100%;
       margin: 0;
       padding: 0;
-      background: #101016;
+      background: #0d1b3c;
       color: #fff;
       font-family: 'Segoe UI', Arial, sans-serif;
       overflow: hidden;
       touch-action: manipulation;
-      -webkit-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-      text-size-adjust: 100%;
     }
     body {
       display: flex;
@@ -24,35 +21,32 @@
       justify-content: flex-start;
       height: 100vh;
       width: 100vw;
-      overscroll-behavior: contain;
-      -webkit-user-select: none;
-      user-select: none;
       max-width: 320px;
       margin: 0 auto;
     }
     #scoreboard {
       width: 100%;
       text-align: center;
-      font-size: 1.25em; /* Reduced font size for less height */
-      margin: 0.2em 0 0.1em 0;
+      font-size: 1.15em;
+      margin: 0.1em 0 0.1em 0;
       letter-spacing: 2px;
       font-weight: bold;
       color: #fff;
-      background: linear-gradient(90deg, #0077ff 0%, #00e0ff 100%);
+      background: linear-gradient(90deg, #002b80 0%, #0058d6 100%);
       border-radius: 18px;
       box-shadow: 0 4px 22px #0077ff44;
-      padding: 0.15em 0 0.1em 0; /* Reduced padding for less height */
+      padding: 0.12em 0 0.07em 0;
       text-shadow: 0 2px 12px #000, 0 0 8px #00e0ff77;
       position: relative;
       z-index: 2;
       border: 2px solid #00e0ff;
-      min-height: 32px;
-      max-height: 38px;
-      height: 2.1em; /* About 1/2 inch on most screens */
+      min-height: 28px;
+      max-height: 34px;
+      height: 2em;
       box-sizing: border-box;
     }
     #kakabanner {
-      font-size: 2em;
+      font-size: 1.7em;
       font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
       font-weight: 900;
       color: #fff;
@@ -93,8 +87,8 @@
       touch-action: manipulation;
     }
     #game {
-      background: #181820;
-      border: 4px solid #0077ff;
+      background: #101b3c;
+      border: 4px solid #00e0ff;
       border-radius: 16px;
       box-shadow: 0 0 24px #0077ffaa;
       width: 280px;
@@ -105,7 +99,7 @@
     }
     canvas {
       display: block;
-      background: #181820;
+      background: #101b3c;
       border-radius: 12px;
       width: 280px !important;
       height: 560px !important;
@@ -292,25 +286,18 @@
     </div>
   </div>
   <script>
-    // Prevent scrolling/zooming on touch devices
-    document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
-    document.addEventListener('dblclick', function(e){ e.preventDefault(); });
-    document.body.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
-    document.body.addEventListener('touchstart', function(e){ if(e.touches.length > 1) e.preventDefault(); }, { passive: false });
-    document.body.addEventListener('mousedown', function(e){ e.preventDefault(); }, { passive: false });
-
     // --- Tetris Constants ---
     const COLS = 10, ROWS = 20, BLOCK = 28;
-    // Improved contrast colors
+    // Official Tetris color palette
     const COLORS = [
       null,
-      "#00eaff", // I
-      "#0050d0", // J
-      "#ff9800", // L
-      "#ffe600", // O
-      "#00ff4c", // S
-      "#b800ff", // T
-      "#ff003c"  // Z (red)
+      "#00ffff", // I (Cyan)
+      "#0000ff", // J (Blue)
+      "#ff7f00", // L (Orange)
+      "#ffff00", // O (Yellow)
+      "#00ff00", // S (Green)
+      "#800080", // T (Purple)
+      "#ff0000"  // Z (Red)
     ];
     const SHAPES = [
       [],
@@ -327,7 +314,7 @@
     // --- Game State ---
     let arena, score, lines, level, dropInterval, dropCounter, lastTime, gameOver;
     let piece, nextPiece;
-    let touchStart = null, touchMoved = false, touchStartTime = 0, lastTouchX = 0, dragMode = false;
+    let touchStart = null, touchMoved = false, lastTouchX = 0, dragMode = false;
     let gameStarted = false;
     let linesAtLevelStart = 0;
     let levelPaused = false;
@@ -394,47 +381,50 @@
       return matrix;
     }
 
-    // Draw subtle grid for clarity
-    function drawGrid() {
-      ctx.save();
-      ctx.strokeStyle = "#222a";
-      ctx.lineWidth = 1;
-      for (let x = 0; x <= COLS; x++) {
-        ctx.beginPath();
-        ctx.moveTo(x * BLOCK, 0);
-        ctx.lineTo(x * BLOCK, ROWS * BLOCK);
-        ctx.stroke();
+    // Draw checkerboard background grid
+    function drawBackgroundGrid() {
+      for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+          ctx.save();
+          ctx.globalAlpha = ((x + y) % 2 === 0) ? 0.09 : 0.18;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
+          ctx.restore();
+        }
       }
-      for (let y = 0; y <= ROWS; y++) {
-        ctx.beginPath();
-        ctx.moveTo(0, y * BLOCK);
-        ctx.lineTo(COLS * BLOCK, y * BLOCK);
-        ctx.stroke();
-      }
-      ctx.restore();
     }
 
-    // Improved block rendering: no harsh lines, slight bevel effect
+    // Modern block rendering: rounded, vibrant, soft highlight
     function drawBlock(x, y, color) {
+      ctx.save();
+      // Rounded square
+      ctx.beginPath();
+      ctx.moveTo(x * BLOCK + 6, y * BLOCK);
+      ctx.lineTo((x + 1) * BLOCK - 6, y * BLOCK);
+      ctx.quadraticCurveTo((x + 1) * BLOCK, y * BLOCK, (x + 1) * BLOCK, y * BLOCK + 6);
+      ctx.lineTo((x + 1) * BLOCK, (y + 1) * BLOCK - 6);
+      ctx.quadraticCurveTo((x + 1) * BLOCK, (y + 1) * BLOCK, (x + 1) * BLOCK - 6, (y + 1) * BLOCK);
+      ctx.lineTo(x * BLOCK + 6, (y + 1) * BLOCK);
+      ctx.quadraticCurveTo(x * BLOCK, (y + 1) * BLOCK, x * BLOCK, (y + 1) * BLOCK - 6);
+      ctx.lineTo(x * BLOCK, y * BLOCK + 6);
+      ctx.quadraticCurveTo(x * BLOCK, y * BLOCK, x * BLOCK + 6, y * BLOCK);
+      ctx.closePath();
+      // Gradient fill
       const grad = ctx.createLinearGradient(
         x * BLOCK, y * BLOCK, (x + 1) * BLOCK, (y + 1) * BLOCK
       );
-      grad.addColorStop(0, "#fff8");
-      grad.addColorStop(0.3, color);
-      grad.addColorStop(1, "#222c");
+      grad.addColorStop(0, "#fff");
+      grad.addColorStop(0.18, color);
+      grad.addColorStop(1, "#222");
       ctx.fillStyle = grad;
-      ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
-
+      ctx.shadowColor = color + "88";
+      ctx.shadowBlur = 8;
+      ctx.fill();
       // Soft highlight
-      ctx.save();
       ctx.globalAlpha = 0.18;
       ctx.fillStyle = "#fff";
       ctx.beginPath();
-      ctx.moveTo(x * BLOCK + 2, y * BLOCK + 2);
-      ctx.lineTo((x + 1) * BLOCK - 2, y * BLOCK + 2);
-      ctx.lineTo((x + 1) * BLOCK - 6, y * BLOCK + 6);
-      ctx.lineTo(x * BLOCK + 6, y * BLOCK + 6);
-      ctx.closePath();
+      ctx.arc(x * BLOCK + BLOCK / 2, y * BLOCK + BLOCK / 2, BLOCK / 2.6, Math.PI * 1.2, Math.PI * 1.9);
       ctx.fill();
       ctx.restore();
     }
@@ -445,7 +435,7 @@
           if (value) {
             ctx.save();
             if (ghost) {
-              ctx.globalAlpha = 0.18;
+              ctx.globalAlpha = 0.13;
               ctx.strokeStyle = COLORS[value];
               ctx.lineWidth = 4;
               ctx.setLineDash([5, 4]);
@@ -629,7 +619,7 @@
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawGrid();
+      drawBackgroundGrid();
       drawMatrix(arena, {x:0, y:0});
       if (!gameOver && piece) {
         drawGhostPiece();
