@@ -288,16 +288,15 @@
   <script>
     // --- Tetris Constants ---
     const COLS = 10, ROWS = 20, BLOCK = 28;
-    // Official Tetris color palette
     const COLORS = [
       null,
-      "#00ffff", // I (Cyan)
-      "#0000ff", // J (Blue)
-      "#ff7f00", // L (Orange)
-      "#ffff00", // O (Yellow)
-      "#00ff00", // S (Green)
-      "#800080", // T (Purple)
-      "#ff0000"  // Z (Red)
+      "#00ffff", // I
+      "#0000ff", // J
+      "#ff7f00", // L
+      "#ffff00", // O
+      "#00ff00", // S
+      "#800080", // T
+      "#ff0000"  // Z
     ];
     const SHAPES = [
       [],
@@ -336,7 +335,7 @@
           levelPaused = false;
           levelMsg.classList.remove('show');
           hideContinueBtn();
-          resumeGameLoop();
+          ensureGameLoop();
         };
         levelMsg.appendChild(btn);
       }
@@ -397,7 +396,6 @@
     // Modern block rendering: rounded, vibrant, soft highlight
     function drawBlock(x, y, color) {
       ctx.save();
-      // Rounded square
       ctx.beginPath();
       ctx.moveTo(x * BLOCK + 6, y * BLOCK);
       ctx.lineTo((x + 1) * BLOCK - 6, y * BLOCK);
@@ -409,7 +407,6 @@
       ctx.lineTo(x * BLOCK, y * BLOCK + 6);
       ctx.quadraticCurveTo(x * BLOCK, y * BLOCK, x * BLOCK + 6, y * BLOCK);
       ctx.closePath();
-      // Gradient fill
       const grad = ctx.createLinearGradient(
         x * BLOCK, y * BLOCK, (x + 1) * BLOCK, (y + 1) * BLOCK
       );
@@ -420,7 +417,6 @@
       ctx.shadowColor = color + "88";
       ctx.shadowBlur = 8;
       ctx.fill();
-      // Soft highlight
       ctx.globalAlpha = 0.18;
       ctx.fillStyle = "#fff";
       ctx.beginPath();
@@ -524,6 +520,7 @@
       }
       dropCounter = 0;
       lastTime = performance.now();
+      ensureGameLoop();
     }
 
     function playerDrop() {
@@ -549,14 +546,17 @@
         }
         updateScore();
         resetPiece();
+        return;
       }
       dropCounter = 0;
+      ensureGameLoop();
     }
 
     function playerMove(dir) {
       if (gameOver || levelPaused) return;
       piece.pos.x += dir;
       if (collide(arena, piece)) piece.pos.x -= dir;
+      ensureGameLoop();
     }
 
     function playerRotate() {
@@ -573,6 +573,7 @@
           return;
         }
       }
+      ensureGameLoop();
     }
 
     function hardDrop() {
@@ -600,6 +601,7 @@
       }
       updateScore();
       resetPiece();
+      ensureGameLoop();
     }
 
     function arenaSweep() {
@@ -656,7 +658,7 @@
         animationFrameId = null;
       }
     }
-    function resumeGameLoop() {
+    function ensureGameLoop() {
       if (!animationFrameId && !gameOver && !levelPaused) {
         lastTime = performance.now();
         animationFrameId = requestAnimationFrame(update);
@@ -683,7 +685,6 @@
       const totalDx = touch.clientX - touchStart.clientX;
       const totalDy = touch.clientY - touchStart.clientY;
       const minMove = 8;
-      // If horizontal movement is bigger than vertical, treat as drag
       if (Math.abs(totalDx) > Math.abs(totalDy)) {
         if (Math.abs(dx) > minMove) {
           const dir = dx > 0 ? 1 : -1;
@@ -704,7 +705,6 @@
       const totalDy = touchEnd.clientY - touchStart.clientY;
       const absDx = Math.abs(totalDx), absDy = Math.abs(totalDy);
       const minSwipe = 40;
-      // Only allow drop if swipe is mostly vertical and not a drag
       if (!dragMode && absDy > minSwipe && totalDy > 0 && absDy > absDx) {
         hardDrop();
       } else if (!touchMoved || (absDx < 10 && absDy < 10)) {
@@ -713,19 +713,17 @@
       touchStart = null;
       lastTouchX = 0;
       dragMode = false;
-      resumeGameLoop();
+      ensureGameLoop();
     }, { passive: false });
 
-    // --- Desktop fallback controls (optional) ---
     document.addEventListener('keydown', function(e) {
       if (!gameStarted || gameOver || levelPaused) return;
-      if (e.key === 'ArrowLeft') { playerMove(-1); resumeGameLoop(); }
-      else if (e.key === 'ArrowRight') { playerMove(1); resumeGameLoop(); }
-      else if (e.key === 'ArrowUp') { playerRotate(); resumeGameLoop(); }
-      else if (e.key === 'ArrowDown') { hardDrop(); resumeGameLoop(); }
+      if (e.key === 'ArrowLeft') { playerMove(-1); ensureGameLoop(); }
+      else if (e.key === 'ArrowRight') { playerMove(1); ensureGameLoop(); }
+      else if (e.key === 'ArrowUp') { playerRotate(); ensureGameLoop(); }
+      else if (e.key === 'ArrowDown') { hardDrop(); ensureGameLoop(); }
     });
 
-    // --- Game Over Overlay ---
     function showGameOver() {
       gameoverDiv.classList.add('show');
     }
@@ -734,7 +732,6 @@
       startGame();
     });
 
-    // --- How to Play Animation Overlay ---
     function hideHowToPlay() {
       let htp = document.getElementById('howtoplay');
       htp.style.animation = 'fadeOut 0.5s';
@@ -746,7 +743,6 @@
 
     window.addEventListener('DOMContentLoaded', function() {
       var htp = document.getElementById('howtoplay');
-      // Only call hideHowToPlay, don't preventDefault so tap works everywhere
       htp.addEventListener('touchstart', hideHowToPlay, { passive: false });
       htp.addEventListener('click', hideHowToPlay, { passive: false });
     });
@@ -758,7 +754,7 @@
       updateScore();
       announceLevel();
       lastTime = performance.now();
-      resumeGameLoop();
+      ensureGameLoop();
     }
 
     // --- Start paused, show how to play ---
