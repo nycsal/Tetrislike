@@ -51,11 +51,7 @@
       font-weight: 900;
       color: #fff;
       letter-spacing: 4px;
-      text-shadow:
-        0 2px 16px #00e0ff,
-        0 0 8px #0077ff,
-        2px 2px 0 #222,
-        0 0 2px #fff;
+      text-shadow: 0 2px 16px #00e0ff, 0 0 8px #0077ff, 2px 2px 0 #222, 0 0 2px #fff;
       margin-bottom: 0.05em;
       background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%);
       -webkit-background-clip: text;
@@ -87,7 +83,7 @@
       touch-action: none;
     }
     #game {
-      background: #101b3c;
+      background: #181820;
       border: 4px solid #00e0ff;
       border-radius: 16px;
       box-shadow: 0 0 24px #0077ffaa;
@@ -99,7 +95,7 @@
     }
     canvas {
       display: block;
-      background: #101b3c;
+      background: #181820;
       border-radius: 12px;
       width: 280px !important;
       height: 560px !important;
@@ -288,29 +284,10 @@
   <script>
     // --- Tetris Constants ---
     const COLS = 10, ROWS = 20, BLOCK = 28;
-    const COLORS = [
-      null,
-      "#00ffff", // I
-      "#0000ff", // J
-      "#ff7f00", // L
-      "#ffff00", // O
-      "#00ff00", // S
-      "#800080", // T
-      "#ff0000"  // Z
-    ];
-    const SHAPES = [
-      [],
-      [[0,1],[1,1],[2,1],[3,1]], // I
-      [[0,0],[0,1],[1,1],[2,1]], // J
-      [[2,0],[0,1],[1,1],[2,1]], // L
-      [[1,0],[2,0],[1,1],[2,1]], // O
-      [[1,0],[2,0],[0,1],[1,1]], // S
-      [[1,0],[0,1],[1,1],[2,1]], // T
-      [[0,0],[1,0],[1,1],[2,1]]  // Z
-    ];
+    const COLORS = [null,"#00ffff","#0000ff","#ff7f00","#ffff00","#00ff00","#800080","#ff0000"];
+    const SHAPES = [[],[[0,1],[1,1],[2,1],[3,1]],[[0,0],[0,1],[1,1],[2,1]],[[2,0],[0,1],[1,1],[2,1]],[[1,0],[2,0],[1,1],[2,1]],[[1,0],[2,0],[0,1],[1,1]],[[1,0],[0,1],[1,1],[2,1]],[[0,0],[1,0],[1,1],[2,1]]];
     const levelLines = [3,4,5,6,7,8,9,999];
 
-    // --- Game State ---
     let arena, score, lines, level, dropInterval, dropCounter, lastTime, gameOver;
     let piece, nextPiece;
     let touchStart = null, touchMoved = false, lastTouchX = 0, dragMode = false;
@@ -325,7 +302,6 @@
     const gameoverDiv = document.getElementById('gameover');
     const restartBtn = document.getElementById('restartBtn');
 
-    // --- Add Continue Button for Level Up ---
     function showContinueBtn() {
       if (!document.getElementById('continueBtn')) {
         const btn = document.createElement('button');
@@ -335,7 +311,7 @@
           levelPaused = false;
           levelMsg.classList.remove('show');
           hideContinueBtn();
-          ensureGameLoop();
+          startLoop();
         };
         levelMsg.appendChild(btn);
       }
@@ -362,8 +338,7 @@
       gameoverDiv.classList.remove('show');
       levelPaused = false;
       hideContinueBtn();
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      animationFrameId = null;
+      stopLoop();
     }
 
     function announceLevel() {
@@ -380,48 +355,23 @@
       return matrix;
     }
 
-    // Draw checkerboard background grid
-    function drawBackgroundGrid() {
-      for (let y = 0; y < ROWS; y++) {
-        for (let x = 0; x < COLS; x++) {
-          ctx.save();
-          ctx.globalAlpha = ((x + y) % 2 === 0) ? 0.09 : 0.18;
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
-          ctx.restore();
-        }
+    function drawBackgroundStripes() {
+      ctx.save();
+      ctx.globalAlpha = 0.13;
+      ctx.fillStyle = "#fff";
+      for (let x = 1; x < COLS; x++) {
+        ctx.fillRect(x * BLOCK - 2, 0, 4, ROWS * BLOCK);
       }
+      ctx.restore();
     }
 
-    // Modern block rendering: rounded, vibrant, soft highlight
     function drawBlock(x, y, color) {
       ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(x * BLOCK + 6, y * BLOCK);
-      ctx.lineTo((x + 1) * BLOCK - 6, y * BLOCK);
-      ctx.quadraticCurveTo((x + 1) * BLOCK, y * BLOCK, (x + 1) * BLOCK, y * BLOCK + 6);
-      ctx.lineTo((x + 1) * BLOCK, (y + 1) * BLOCK - 6);
-      ctx.quadraticCurveTo((x + 1) * BLOCK, (y + 1) * BLOCK, (x + 1) * BLOCK - 6, (y + 1) * BLOCK);
-      ctx.lineTo(x * BLOCK + 6, (y + 1) * BLOCK);
-      ctx.quadraticCurveTo(x * BLOCK, (y + 1) * BLOCK, x * BLOCK, (y + 1) * BLOCK - 6);
-      ctx.lineTo(x * BLOCK, y * BLOCK + 6);
-      ctx.quadraticCurveTo(x * BLOCK, y * BLOCK, x * BLOCK + 6, y * BLOCK);
-      ctx.closePath();
-      const grad = ctx.createLinearGradient(
-        x * BLOCK, y * BLOCK, (x + 1) * BLOCK, (y + 1) * BLOCK
-      );
-      grad.addColorStop(0, "#fff");
-      grad.addColorStop(0.18, color);
-      grad.addColorStop(1, "#222");
-      ctx.fillStyle = grad;
-      ctx.shadowColor = color + "88";
-      ctx.shadowBlur = 8;
-      ctx.fill();
-      ctx.globalAlpha = 0.18;
-      ctx.fillStyle = "#fff";
-      ctx.beginPath();
-      ctx.arc(x * BLOCK + BLOCK / 2, y * BLOCK + BLOCK / 2, BLOCK / 2.6, Math.PI * 1.2, Math.PI * 1.9);
-      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.fillRect(x * BLOCK, y * BLOCK, BLOCK, BLOCK);
+      ctx.strokeStyle = "#222";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x * BLOCK + 0.5, y * BLOCK + 0.5, BLOCK - 1, BLOCK - 1);
       ctx.restore();
     }
 
@@ -433,8 +383,8 @@
             if (ghost) {
               ctx.globalAlpha = 0.13;
               ctx.strokeStyle = COLORS[value];
-              ctx.lineWidth = 4;
-              ctx.setLineDash([5, 4]);
+              ctx.lineWidth = 2;
+              ctx.setLineDash([4, 4]);
               ctx.strokeRect((x+offset.x)*BLOCK+2, (y+offset.y)*BLOCK+2, BLOCK-4, BLOCK-4);
               ctx.setLineDash([]);
             } else {
@@ -515,12 +465,11 @@
       if (collide(arena, piece)) {
         gameOver = true;
         showGameOver();
-        stopGameLoop();
+        stopLoop();
         return;
       }
       dropCounter = 0;
       lastTime = performance.now();
-      ensureGameLoop();
     }
 
     function playerDrop() {
@@ -539,24 +488,21 @@
             linesAtLevelStart = lines;
             dropInterval = Math.max(150, 800 - (level-1)*100);
             announceLevel();
-            stopGameLoop();
+            stopLoop();
             updateScore();
-            return; // Pause for continue
+            return;
           }
         }
         updateScore();
         resetPiece();
-        return;
       }
       dropCounter = 0;
-      ensureGameLoop();
     }
 
     function playerMove(dir) {
       if (gameOver || levelPaused) return;
       piece.pos.x += dir;
       if (collide(arena, piece)) piece.pos.x -= dir;
-      ensureGameLoop();
     }
 
     function playerRotate() {
@@ -573,7 +519,6 @@
           return;
         }
       }
-      ensureGameLoop();
     }
 
     function hardDrop() {
@@ -594,14 +539,13 @@
           linesAtLevelStart = lines;
           dropInterval = Math.max(150, 800 - (level-1)*100);
           announceLevel();
-          stopGameLoop();
+          stopLoop();
           updateScore();
-          return; // Pause for continue
+          return;
         }
       }
       updateScore();
       resetPiece();
-      ensureGameLoop();
     }
 
     function arenaSweep() {
@@ -621,7 +565,7 @@
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBackgroundGrid();
+      drawBackgroundStripes();
       drawMatrix(arena, {x:0, y:0});
       if (!gameOver && piece) {
         drawGhostPiece();
@@ -643,22 +587,22 @@
       }
       const delta = time - lastTime;
       lastTime = time;
-
       dropCounter += delta;
       if (dropCounter > dropInterval) {
         playerDrop();
+        dropCounter = 0;
       }
       draw();
       animationFrameId = requestAnimationFrame(update);
     }
 
-    function stopGameLoop() {
+    function stopLoop() {
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
       }
     }
-    function ensureGameLoop() {
+    function startLoop() {
       if (!animationFrameId && !gameOver && !levelPaused) {
         lastTime = performance.now();
         animationFrameId = requestAnimationFrame(update);
@@ -674,6 +618,7 @@
       touchMoved = false;
       dragMode = false;
       lastTouchX = touchStart.clientX;
+      startLoop();
     }, { passive: false });
 
     canvas.addEventListener('touchmove', function(e) {
@@ -694,6 +639,7 @@
         }
       }
       touchMoved = true;
+      startLoop();
     }, { passive: false });
 
     canvas.addEventListener('touchend', function(e) {
@@ -713,15 +659,15 @@
       touchStart = null;
       lastTouchX = 0;
       dragMode = false;
-      ensureGameLoop();
+      startLoop();
     }, { passive: false });
 
     document.addEventListener('keydown', function(e) {
       if (!gameStarted || gameOver || levelPaused) return;
-      if (e.key === 'ArrowLeft') { playerMove(-1); ensureGameLoop(); }
-      else if (e.key === 'ArrowRight') { playerMove(1); ensureGameLoop(); }
-      else if (e.key === 'ArrowUp') { playerRotate(); ensureGameLoop(); }
-      else if (e.key === 'ArrowDown') { hardDrop(); ensureGameLoop(); }
+      if (e.key === 'ArrowLeft') { playerMove(-1); startLoop(); }
+      else if (e.key === 'ArrowRight') { playerMove(1); startLoop(); }
+      else if (e.key === 'ArrowUp') { playerRotate(); startLoop(); }
+      else if (e.key === 'ArrowDown') { hardDrop(); startLoop(); }
     });
 
     function showGameOver() {
@@ -754,10 +700,9 @@
       updateScore();
       announceLevel();
       lastTime = performance.now();
-      ensureGameLoop();
+      startLoop();
     }
 
-    // --- Start paused, show how to play ---
     resetGameState();
     draw();
   </script>
