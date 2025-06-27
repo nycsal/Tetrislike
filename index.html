@@ -4,26 +4,8 @@
   <meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KaKaTris</title>
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background: #0d1b3c;
-      color: #fff;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      overflow: hidden;
-      touch-action: none;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      height: 100vh;
-      width: 100vw;
-      max-width: 320px;
-      margin: 0 auto;
-    }
+    html, body { height: 100%; margin: 0; padding: 0; background: #0d1b3c; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; touch-action: none; }
+    body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; width: 100vw; max-width: 320px; margin: 0 auto; }
     #scoreboard {
       width: 100%;
       text-align: center;
@@ -40,10 +22,12 @@
       position: relative;
       z-index: 2;
       border: 2px solid #00e0ff;
-      min-height: 28px;
-      max-height: 34px;
-      height: 2em;
+      min-height: 76px; /* increased by ~48px (half inch) */
+      height: 76px;
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
     #kakabanner {
       font-size: 1.7em;
@@ -71,168 +55,50 @@
       margin: 0 0.1em;
       text-shadow: 0 1px 6px #0077ff99;
     }
-    #gamebox {
-      position: relative;
-      width: 280px;
-      height: 560px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: none;
-      touch-action: none;
-    }
-    #game {
-      background: #181820;
-      border: 4px solid #00e0ff;
-      border-radius: 16px;
-      box-shadow: 0 0 24px #0077ffaa;
-      width: 280px;
-      height: 560px;
-      position: relative;
-      z-index: 1;
-      touch-action: none;
-    }
-    canvas {
-      display: block;
-      background: #181820;
-      border-radius: 12px;
-      width: 280px !important;
-      height: 560px !important;
-      touch-action: none;
-    }
-    #howtoplay {
-      position: fixed;
-      left: 0; top: 0; width: 100vw; height: 100vh;
-      background: rgba(20,16,32,0.92);
-      z-index: 99;
-      display: flex;
+    #gamebox { position: relative; width: 280px; height: 560px; margin: 0 auto; display: flex; justify-content: center; align-items: center; background: none; touch-action: none; }
+    #game { background: #181820; border: 4px solid #00e0ff; border-radius: 16px; box-shadow: 0 0 24px #0077ffaa; width: 280px; height: 560px; position: relative; z-index: 1; touch-action: none; }
+    canvas { display: block; background: #181820; border-radius: 12px; width: 280px !important; height: 560px !important; touch-action: none; }
+    #howtoplay { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(20,16,32,0.92); z-index: 99; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #fff; font-size: 1.3em; text-align: center; animation: fadeIn 0.7s; -webkit-user-select: none; user-select: none; touch-action: none; }
+    #howtoplay .icon { font-size: 2.4em; margin: 0.3em; color: #ffde59; text-shadow: 0 0 8px #0077ff; }
+    #howtoplay .hint { margin: 0.6em 0 0.2em 0; font-size: 1.1em; color: #ffde59; }
+    #levelmsg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,32,0.88); z-index: 20; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5em; font-weight: bold; text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.5s; flex-direction: column; }
+    #levelmsg.show { opacity: 1; pointer-events: auto; }
+    #continueBtn { margin-top: 1.2em; font-size: 1.1em; background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%); color: #fff; border: none; border-radius: 12px; padding: 0.5em 2.5em; font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif; font-weight: bold; letter-spacing: 2px; box-shadow: 0 2px 16px #0077ff88; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+    #continueBtn:active { background: linear-gradient(90deg, #0077ff 10%, #00e0ff 90%); box-shadow: 0 2px 24px #00e0ffcc; }
+    #gameover { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: rgba(10,10,30,0.93); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif; color: #fff; font-size: 2em; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 16px #0077ff, 0 0 8px #00e0ff; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+    #gameover.show { opacity: 1; pointer-events: auto; }
+    #restartBtn { margin-top: 1.2em; font-size: 1.1em; background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%); color: #fff; border: none; border-radius: 12px; padding: 0.5em 2.5em; font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif; font-weight: bold; letter-spacing: 2px; box-shadow: 0 2px 16px #0077ff88; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+    #restartBtn:active { background: linear-gradient(90deg, #0077ff 10%, #00e0ff 90%); box-shadow: 0 2px 24px #00e0ffcc; }
+    #pullDownHint {
+      position: absolute;
+      left: 0; top: 0; width: 100%; height: 100%;
+      display: none;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
-      color: #fff;
-      font-size: 1.3em;
-      text-align: center;
-      animation: fadeIn 0.7s;
-      -webkit-user-select: none;
+      pointer-events: none;
+      z-index: 50;
+    }
+    #pullDownHint.show {
+      display: flex;
+      animation: fadeIn 0.4s;
+    }
+    .down-arrow-anim {
+      font-size: 3em;
+      color: #ffde59;
+      text-shadow: 0 0 12px #fff, 0 0 24px #0077ff;
+      animation: arrowPulse 1s infinite;
       user-select: none;
-      touch-action: none;
-    }
-    #howtoplay .icon {
-      font-size: 2.4em;
-      margin: 0.3em;
-      color: #ffde59;
-      text-shadow: 0 0 8px #0077ff;
-    }
-    #howtoplay .hint {
-      margin: 0.6em 0 0.2em 0;
-      font-size: 1.1em;
-      color: #ffde59;
-    }
-    #levelmsg {
-      position: absolute;
-      left: 0; top: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,32,0.88);
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 1.5em;
-      font-weight: bold;
-      text-align: center;
       pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.5s;
-      flex-direction: column;
     }
-    #levelmsg.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    #continueBtn {
-      margin-top: 1.2em;
-      font-size: 1.1em;
-      background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 0.5em 2.5em;
-      font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
-      font-weight: bold;
-      letter-spacing: 2px;
-      box-shadow: 0 2px 16px #0077ff88;
-      cursor: pointer;
-      transition: background 0.2s, box-shadow 0.2s;
-    }
-    #continueBtn:active {
-      background: linear-gradient(90deg, #0077ff 10%, #00e0ff 90%);
-      box-shadow: 0 2px 24px #00e0ffcc;
-    }
-    #gameover {
-      position: absolute;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background: rgba(10,10,30,0.93);
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
-      color: #fff;
-      font-size: 2em;
-      font-weight: bold;
-      letter-spacing: 2px;
-      text-shadow: 0 0 16px #0077ff, 0 0 8px #00e0ff;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s;
-    }
-    #gameover.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    #restartBtn {
-      margin-top: 1.2em;
-      font-size: 1.1em;
-      background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 0.5em 2.5em;
-      font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
-      font-weight: bold;
-      letter-spacing: 2px;
-      box-shadow: 0 2px 16px #0077ff88;
-      cursor: pointer;
-      transition: background 0.2s, box-shadow 0.2s;
-    }
-    #restartBtn:active {
-      background: linear-gradient(90deg, #0077ff 10%, #00e0ff 90%);
-      box-shadow: 0 2px 24px #00e0ffcc;
+    @keyframes arrowPulse {
+      0% { transform: translateY(0); opacity: 0.7;}
+      50% { transform: translateY(18px); opacity: 1;}
+      100% { transform: translateY(0); opacity: 0.7;}
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-    #controls {
-      margin-top: 0.7em;
-      color: #aaa;
-      font-size: 1em;
-      text-align: center;
-      user-select: none;
-    }
-    @media (max-width: 400px) {
-      #gamebox, #game {
-        width: 280px;
-        height: 560px;
-        max-width: 280px;
-        max-height: 560px;
-        min-width: 280px;
-        min-height: 560px;
-      }
-    }
+    #controls { margin-top: 0.7em; color: #aaa; font-size: 1em; text-align: center; user-select: none; }
+    @media (max-width: 400px) { #gamebox, #game { width: 280px; height: 560px; max-width: 280px; max-height: 560px; min-width: 280px; min-height: 560px; } }
   </style>
 </head>
 <body>
@@ -245,6 +111,7 @@
   <div id="gamebox">
     <div id="game">
       <canvas id="tetris" width="280" height="560"></canvas>
+      <div id="pullDownHint"><span class="down-arrow-anim">&#x2B07;</span></div>
       <div id="levelmsg"></div>
       <div id="gameover">
         <div>GAME OVER</div>
@@ -295,12 +162,30 @@
     let linesAtLevelStart = 0;
     let levelPaused = false;
     let animationFrameId = null;
+    let lastUpdateTime = 0;
+    let lastBlockMoveTime = 0;
+    let blockStallTimeout = 2200; // ms, if no drop in this time, show hint
+    let hintVisible = false;
 
     const canvas = document.getElementById('tetris');
     const ctx = canvas.getContext('2d');
     const levelMsg = document.getElementById('levelmsg');
     const gameoverDiv = document.getElementById('gameover');
     const restartBtn = document.getElementById('restartBtn');
+    const pullDownHint = document.getElementById('pullDownHint');
+
+    function showPullDownHint() {
+      if (!hintVisible) {
+        pullDownHint.classList.add('show');
+        hintVisible = true;
+      }
+    }
+    function hidePullDownHint() {
+      if (hintVisible) {
+        pullDownHint.classList.remove('show');
+        hintVisible = false;
+      }
+    }
 
     function showContinueBtn() {
       if (!document.getElementById('continueBtn')) {
@@ -339,6 +224,7 @@
       levelPaused = false;
       hideContinueBtn();
       stopLoop();
+      hidePullDownHint();
     }
 
     function announceLevel() {
@@ -466,10 +352,13 @@
         gameOver = true;
         showGameOver();
         stopLoop();
+        hidePullDownHint();
         return;
       }
       dropCounter = 0;
       lastTime = performance.now();
+      lastBlockMoveTime = Date.now();
+      hidePullDownHint();
     }
 
     function playerDrop() {
@@ -490,6 +379,7 @@
             announceLevel();
             stopLoop();
             updateScore();
+            hidePullDownHint();
             return;
           }
         }
@@ -497,12 +387,16 @@
         resetPiece();
       }
       dropCounter = 0;
+      lastBlockMoveTime = Date.now();
+      hidePullDownHint();
     }
 
     function playerMove(dir) {
       if (gameOver || levelPaused) return;
       piece.pos.x += dir;
       if (collide(arena, piece)) piece.pos.x -= dir;
+      lastBlockMoveTime = Date.now();
+      hidePullDownHint();
     }
 
     function playerRotate() {
@@ -519,6 +413,8 @@
           return;
         }
       }
+      lastBlockMoveTime = Date.now();
+      hidePullDownHint();
     }
 
     function hardDrop() {
@@ -541,11 +437,14 @@
           announceLevel();
           stopLoop();
           updateScore();
+          hidePullDownHint();
           return;
         }
       }
       updateScore();
       resetPiece();
+      lastBlockMoveTime = Date.now();
+      hidePullDownHint();
     }
 
     function arenaSweep() {
@@ -583,8 +482,10 @@
       if (!gameStarted) return;
       if (gameOver || levelPaused) {
         draw();
+        hidePullDownHint();
         return;
       }
+      const now = Date.now();
       const delta = time - lastTime;
       lastTime = time;
       dropCounter += delta;
@@ -593,6 +494,14 @@
         dropCounter = 0;
       }
       draw();
+
+      // --- Stall detection: show arrow if block hasn't moved for a while ---
+      if (now - lastBlockMoveTime > blockStallTimeout) {
+        showPullDownHint();
+      } else {
+        hidePullDownHint();
+      }
+
       animationFrameId = requestAnimationFrame(update);
     }
 
@@ -672,6 +581,7 @@
 
     function showGameOver() {
       gameoverDiv.classList.add('show');
+      hidePullDownHint();
     }
     restartBtn.addEventListener('click', function() {
       gameoverDiv.classList.remove('show');
@@ -700,6 +610,7 @@
       updateScore();
       announceLevel();
       lastTime = performance.now();
+      lastBlockMoveTime = Date.now();
       startLoop();
     }
 
