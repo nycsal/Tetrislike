@@ -139,6 +139,9 @@
     #restartBtn { margin-top: 1.2em; font-size: 1.1em; background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%); color: #fff; border: none; border-radius: 12px; padding: 0.5em 2.5em; font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif; font-weight: bold; letter-spacing: 2px; box-shadow: 0 2px 16px #0077ff88; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
     #restartBtn:active { background: linear-gradient(90deg, #0077ff 10%, #00e0ff 90%); box-shadow: 0 2px 24px #00e0ffcc; }
     #controls { margin-top: 0.7em; color: #aaa; font-size: 1em; text-align: center; user-select: none; }
+    #howtoplay { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(20,16,32,0.92); z-index: 999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #fff; font-size: 1.3em; text-align: center; animation: fadeIn 0.7s; -webkit-user-select: none; user-select: none; touch-action: none; }
+    #howtoplay .icon { font-size: 2.4em; margin: 0.3em; color: #ffde59; text-shadow: 0 0 8px #0077ff; }
+    #howtoplay .hint { margin: 0.6em 0 0.2em 0; font-size: 1.1em; color: #ffde59; }
     @media (max-width: 400px) {
       #branding { margin-top: 0.3em; }
       #kakabanner { font-size: 1.3em; padding: 0.1em 0.3em; }
@@ -223,6 +226,7 @@
     const gameoverDiv = document.getElementById('gameover');
     const restartBtn = document.getElementById('restartBtn');
     const pullDownHint = document.getElementById('pullDownHint');
+    const howToPlay = document.getElementById('howtoplay');
 
     function showPullDownHint() {
       if (!hintVisible) {
@@ -639,18 +643,20 @@
     });
 
     function hideHowToPlay() {
-      let htp = document.getElementById('howtoplay');
-      htp.style.animation = 'fadeOut 0.5s';
+      howToPlay.style.animation = 'fadeOut 0.5s';
       setTimeout(function() {
-        htp.style.display = 'none';
+        howToPlay.style.display = 'none';
         startGame();
       }, 450);
     }
 
+    // Show instructions overlay at start, tap/click to start game
     window.addEventListener('DOMContentLoaded', function() {
-      var htp = document.getElementById('howtoplay');
-      htp.addEventListener('touchstart', hideHowToPlay, { passive: false });
-      htp.addEventListener('click', hideHowToPlay, { passive: false });
+      howToPlay.style.display = 'flex';
+      howToPlay.addEventListener('touchstart', hideHowToPlay, { passive: false });
+      howToPlay.addEventListener('click', hideHowToPlay, { passive: false });
+      resetGameState();
+      draw();
     });
 
     function startGame() {
@@ -663,9 +669,6 @@
       lastBlockMoveTime = Date.now();
       startLoop();
     }
-
-    resetGameState();
-    draw();
   </script>
 </body>
 </html>
