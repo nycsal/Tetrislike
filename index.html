@@ -85,7 +85,7 @@
   <script>
     // --- Tetris Constants ---
     const COLS = 8, ROWS = 20;
-    const BLOCK = Math.floor(280 / COLS); // 35px
+    const BLOCK = Math.floor(280 / COLS);
     const COLORS = [null,"#00ffff","#0000ff","#ff7f00","#ffff00","#00ff00","#800080","#ff0000"];
     const SHAPES = [[],[[0,1],[1,1],[2,1],[3,1]],[[0,0],[0,1],[1,1],[2,1]],[[2,0],[0,1],[1,1],[2,1]],[[1,0],[2,0],[1,1],[2,1]],[[1,0],[2,0],[0,1],[1,1]],[[1,0],[0,1],[1,1],[2,1]],[[0,0],[1,0],[1,1],[2,1]]];
     const levelLines = [3,4,5,6,7,8,9,999];
@@ -437,7 +437,7 @@
       lastTime = time;
       dropCounter += delta;
 
-      // --- Only show down arrow if piece is NOT moving down for a while ---
+      // Only show down arrow if piece is NOT moving down for a while
       if (piece && piece.pos.y !== lastPieceY) {
         lastBlockMoveTime = now;
         lastPieceY = piece.pos.y;
@@ -445,7 +445,10 @@
       }
       if (dropCounter > dropInterval) {
         // Only drop if not at the bottom
-        if (piece && piece.pos.y + piece.matrix.length < ROWS + 4) {
+        if (piece && !collide(arena, {...piece, pos: {x: piece.pos.x, y: piece.pos.y + 1}})) {
+          playerDrop();
+        } else {
+          // If can't drop further, lock piece
           playerDrop();
         }
         dropCounter = 0;
