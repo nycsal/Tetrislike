@@ -4,131 +4,19 @@
   <meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>KaKaTris</title>
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background: #0d1b3c;
-      color: #fff;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      overflow: hidden;
-      touch-action: none;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-      width: 100vw;
-      max-width: 320px;
-      margin: 0 auto;
-    }
-    #branding {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 0.6em;
-      margin-bottom: 0.3em;
-    }
-    #kakabanner {
-      font-size: 2em;
-      font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
-      font-weight: 900;
-      color: #fff;
-      letter-spacing: 4px;
-      text-shadow: 0 2px 16px #00e0ff, 0 0 8px #0077ff, 2px 2px 0 #222, 0 0 2px #fff;
-      background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      border-radius: 12px;
-      border: 2px solid #00e0ff;
-      padding: 0.1em 0.7em;
-      margin-bottom: 0.2em;
-      box-shadow: 0 4px 22px #0077ff44;
-      display: inline-block;
-    }
-    #gamebox {
-      position: relative;
-      width: 280px;
-      height: 560px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: none;
-      touch-action: none;
-    }
-    #game {
-      background: #181820;
-      border: 4px solid #00e0ff;
-      border-radius: 16px;
-      box-shadow: 0 0 24px #0077ffaa;
-      width: 280px;
-      height: 560px;
-      position: relative;
-      z-index: 1;
-      touch-action: none;
-    }
-    canvas {
-      display: block;
-      background: #181820;
-      border-radius: 12px;
-      width: 280px !important;
-      height: 560px !important;
-      touch-action: none;
-    }
-    #stats {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      margin-top: 0.7em;
-      margin-bottom: 0.2em;
-      width: 100%;
-      gap: 0.5em;
-    }
-    .stat-label {
-      font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
-      font-size: 1.05em;
-      color: #fff;
-      background: linear-gradient(90deg, #0077ff 0%, #00e0ff 100%);
-      border-radius: 16px;
-      padding: 0.28em 1.3em;
-      box-shadow: 0 2px 12px #00e0ff33;
-      border: 1.5px solid #00e0ff;
-      letter-spacing: 1.5px;
-      text-align: center;
-      min-width: 70px;
-    }
-    #pullDownHint {
-      position: absolute;
-      left: 0; top: 0; width: 100%; height: 100%;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 50;
-    }
-    #pullDownHint.show {
-      display: flex;
-      animation: fadeIn 0.4s;
-    }
-    .down-arrow-anim {
-      font-size: 3em;
-      color: #ffde59;
-      text-shadow: 0 0 12px #fff, 0 0 24px #0077ff;
-      animation: arrowPulse 1s infinite;
-      user-select: none;
-      pointer-events: none;
-    }
-    @keyframes arrowPulse {
-      0% { transform: translateY(0); opacity: 0.7;}
-      50% { transform: translateY(18px); opacity: 1;}
-      100% { transform: translateY(0); opacity: 0.7;}
-    }
+    html, body { height: 100%; margin: 0; padding: 0; background: #0d1b3c; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; touch-action: none; }
+    body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; width: 100vw; max-width: 320px; margin: 0 auto; }
+    #branding { width: 100%; display: flex; flex-direction: column; align-items: center; margin-top: 0.6em; margin-bottom: 0.3em; }
+    #kakabanner { font-size: 2em; font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif; font-weight: 900; color: #fff; letter-spacing: 4px; text-shadow: 0 2px 16px #00e0ff, 0 0 8px #0077ff, 2px 2px 0 #222, 0 0 2px #fff; background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; border-radius: 12px; border: 2px solid #00e0ff; padding: 0.1em 0.7em; margin-bottom: 0.2em; box-shadow: 0 4px 22px #0077ff44; display: inline-block; }
+    #gamebox { position: relative; width: 280px; height: 560px; margin: 0 auto; display: flex; justify-content: center; align-items: center; background: none; touch-action: none; }
+    #game { background: #181820; border: 4px solid #00e0ff; border-radius: 16px; box-shadow: 0 0 24px #0077ffaa; width: 280px; height: 560px; position: relative; z-index: 1; touch-action: none; }
+    canvas { display: block; background: #181820; border-radius: 12px; width: 280px !important; height: 560px !important; touch-action: none; }
+    #stats { display: flex; flex-direction: row; align-items: center; justify-content: center; margin-top: 0.7em; margin-bottom: 0.2em; width: 100%; gap: 0.5em; }
+    .stat-label { font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif; font-size: 1.05em; color: #fff; background: linear-gradient(90deg, #0077ff 0%, #00e0ff 100%); border-radius: 16px; padding: 0.28em 1.3em; box-shadow: 0 2px 12px #00e0ff33; border: 1.5px solid #00e0ff; letter-spacing: 1.5px; text-align: center; min-width: 70px; }
+    #pullDownHint { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; pointer-events: none; z-index: 50; }
+    #pullDownHint.show { display: flex; animation: fadeIn 0.4s; }
+    .down-arrow-anim { font-size: 3em; color: #ffde59; text-shadow: 0 0 12px #fff, 0 0 24px #0077ff; animation: arrowPulse 1s infinite; user-select: none; pointer-events: none; }
+    @keyframes arrowPulse { 0% { transform: translateY(0); opacity: 0.7;} 50% { transform: translateY(18px); opacity: 1;} 100% { transform: translateY(0); opacity: 0.7;} }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     #levelmsg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,32,0.88); z-index: 20; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5em; font-weight: bold; text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.5s; flex-direction: column; }
     #levelmsg.show { opacity: 1; pointer-events: auto; }
@@ -142,14 +30,7 @@
     #howtoplay { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(20,16,32,0.92); z-index: 999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #fff; font-size: 1.3em; text-align: center; animation: fadeIn 0.7s; -webkit-user-select: none; user-select: none; touch-action: none; }
     #howtoplay .icon { font-size: 2.4em; margin: 0.3em; color: #ffde59; text-shadow: 0 0 8px #0077ff; }
     #howtoplay .hint { margin: 0.6em 0 0.2em 0; font-size: 1.1em; color: #ffde59; }
-    @media (max-width: 400px) {
-      #branding { margin-top: 0.3em; }
-      #kakabanner { font-size: 1.3em; padding: 0.1em 0.3em; }
-      #gamebox, #game, canvas { width: 98vw !important; max-width: 280px !important; }
-      #gamebox, #game { height: 56vw !important; max-height: 560px !important; }
-      #stats { flex-direction: column; gap: 0.2em; margin-left: 0; }
-      .stat-label { min-width: 60px; font-size: 1em; padding: 0.18em 0.7em; }
-    }
+    @media (max-width: 400px) { #branding { margin-top: 0.3em; } #kakabanner { font-size: 1.3em; padding: 0.1em 0.3em; } #gamebox, #game, canvas { width: 98vw !important; max-width: 280px !important; } #gamebox, #game { height: 56vw !important; max-height: 560px !important; } #stats { flex-direction: column; gap: 0.2em; margin-left: 0; } .stat-label { min-width: 60px; font-size: 1em; padding: 0.18em 0.7em; } }
   </style>
 </head>
 <body>
@@ -323,7 +204,7 @@
           if (value) {
             ctx.save();
             if (ghost) {
-              ctx.globalAlpha = 0.7;
+              ctx.globalAlpha = 1;
               ctx.strokeStyle = COLORS[value];
               ctx.lineWidth = 4;
               ctx.setLineDash([6, 4]);
@@ -349,7 +230,7 @@
       let ghostY = piece.pos.y;
       while (!collide(arena, {matrix: piece.matrix, pos: {x: piece.pos.x, y: ghostY+1}})) {
         ghostY++;
-        if (ghostY > ROWS) break;
+        if (ghostY >= ROWS) break;
       }
       drawMatrix(piece.matrix, {x: piece.pos.x, y: ghostY}, true);
     }
@@ -486,7 +367,7 @@
       if (gameOver || levelPaused) return;
       while (!collide(arena, piece)) {
         piece.pos.y++;
-        if (piece.pos.y > ROWS) break;
+        if (piece.pos.y >= ROWS) break;
       }
       piece.pos.y--;
       merge(arena, piece);
@@ -563,7 +444,10 @@
         hidePullDownHint();
       }
       if (dropCounter > dropInterval) {
-        playerDrop();
+        // Only drop if not at the bottom
+        if (piece && piece.pos.y + piece.matrix.length < ROWS + 4) {
+          playerDrop();
+        }
         dropCounter = 0;
       }
       draw();
