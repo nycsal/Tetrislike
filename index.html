@@ -174,7 +174,8 @@ function drawMatrix(matrix, offset, ghost=false) {
           ctx.setLineDash([]);
         } else {
           ctx.globalAlpha = 1;
-          drawBlock(x + offset.x, y + offset.y, COLORS[value]);
+          if (y + offset.y >= 0 && y + offset.y < ROWS) // Only draw visible rows
+            drawBlock(x + offset.x, y + offset.y, COLORS[value]);
         }
         ctx.restore();
       }
@@ -207,11 +208,11 @@ function collide(arena, piece) {
   for (let y = 0; y < m.length; ++y) {
     for (let x = 0; x < m[y].length; ++x) {
       if (m[y][x] && (
-        !arena[y + o.y] ||
-        arena[y + o.y][x + o.x] !== 0 ||
+        (y + o.y) < 0 ||
+        (y + o.y) >= ROWS ||
         (x + o.x) < 0 ||
         (x + o.x) >= COLS ||
-        (y + o.y) >= ROWS
+        arena[y + o.y][x + o.x]
       )) {
         return true;
       }
@@ -306,6 +307,16 @@ function playerRotate() {
   lastBlockMoveTime = Date.now();
   lastPieceY = piece.pos.y;
   hidePullDownHint();
+}
+
+function rotate(matrix, dir) {
+  for (let y = 0; y < matrix.length; ++y) {
+    for (let x = 0; x < y; ++x) {
+      [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+    }
+  }
+  if (dir > 0) matrix.forEach(row => row.reverse());
+  else matrix.reverse();
 }
 
 function hardDrop() {
@@ -471,7 +482,7 @@ document.addEventListener('keydown', function(e) {
   if (!gameStarted || gameOver || levelPaused) return;
   if (e.key === 'ArrowLeft') { playerMove(-1); startLoop(); }
   else if (e.key === 'ArrowRight') { playerMove(1); startLoop(); }
-  else if (e.key === 'ArrowUp') { playerRotate(); startLoop(); }
+  else if (e.key === 'ArrowUp' || e.key === 'x' || e.key === 'X') { playerRotate(); startLoop(); }
   else if (e.key === 'ArrowDown') { hardDrop(); startLoop(); }
 });
 
