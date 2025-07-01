@@ -174,7 +174,7 @@ function drawMatrix(matrix, offset, ghost=false) {
           ctx.setLineDash([]);
         } else {
           ctx.globalAlpha = 1;
-          if (y + offset.y >= 0 && y + offset.y < ROWS) // Only draw visible rows
+          if (y + offset.y >= 0 && y + offset.y < ROWS)
             drawBlock(x + offset.x, y + offset.y, COLORS[value]);
         }
         ctx.restore();
@@ -207,14 +207,18 @@ function collide(arena, piece) {
   const [m, o] = [piece.matrix, piece.pos];
   for (let y = 0; y < m.length; ++y) {
     for (let x = 0; x < m[y].length; ++x) {
-      if (m[y][x] && (
-        (y + o.y) < 0 ||
-        (y + o.y) >= ROWS ||
-        (x + o.x) < 0 ||
-        (x + o.x) >= COLS ||
-        arena[y + o.y][x + o.x]
-      )) {
-        return true;
+      if (m[y][x]) {
+        let newY = y + o.y;
+        let newX = x + o.x;
+        if (
+          newY < 0 ||
+          newY >= ROWS ||
+          newX < 0 ||
+          newX >= COLS ||
+          arena[newY][newX]
+        ) {
+          return true;
+        }
       }
     }
   }
@@ -252,9 +256,9 @@ function createPiece(type) {
 
 function playerDrop() {
   if (gameOver || levelPaused) return;
-  piece.pos.y++;
-  if (collide(arena, piece)) {
-    piece.pos.y--;
+  // Only move down if the bottom of the piece is still in bounds
+  let maxY = getPieceMaxY(piece.matrix);
+  if (piece.pos.y + maxY + 1 >= ROWS || collide(arena, {...piece, pos: {x: piece.pos.x, y: piece.pos.y + 1}})) {
     merge(arena, piece);
     let cleared = arenaSweep();
     if (cleared) {
@@ -274,11 +278,24 @@ function playerDrop() {
     }
     updateScore();
     resetPiece();
+  } else {
+    piece.pos.y++;
   }
   dropCounter = 0;
   lastBlockMoveTime = Date.now();
   lastPieceY = piece.pos.y;
   hidePullDownHint();
+}
+
+function getPieceMaxY(matrix) {
+  let maxY = 0;
+  for (let y = matrix.length - 1; y >= 0; y--) {
+    if (matrix[y].some(cell => cell)) {
+      maxY = y;
+      break;
+    }
+  }
+  return maxY;
 }
 
 function playerMove(dir) {
@@ -321,11 +338,10 @@ function rotate(matrix, dir) {
 
 function hardDrop() {
   if (gameOver || levelPaused) return;
-  while (!collide(arena, piece)) {
+  let maxY = getPieceMaxY(piece.matrix);
+  while (piece.pos.y + maxY + 1 < ROWS && !collide(arena, {...piece, pos: {x: piece.pos.x, y: piece.pos.y + 1}})) {
     piece.pos.y++;
-    if (piece.pos.y >= ROWS) break;
   }
-  piece.pos.y--;
   merge(arena, piece);
   let cleared = arenaSweep();
   if (cleared) {
