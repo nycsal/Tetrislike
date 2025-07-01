@@ -4,7 +4,6 @@
 <meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>KaKaTris</title>
 <style>
-  /* Your existing styling here (same as before) */
   html, body { height: 100%; margin: 0; padding: 0; background: #0d1b3c; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; touch-action: none; }
   body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; width: 100vw; max-width: 320px; margin: 0 auto; }
   #branding { width: 100%; display: flex; flex-direction: column; align-items: center; margin-top: 0.6em; margin-bottom: 0.3em; }
@@ -19,7 +18,19 @@
   .down-arrow-anim { font-size: 3em; color: #ffde59; text-shadow: 0 0 12px #fff, 0 0 24px #0077ff; animation: arrowPulse 1s infinite; user-select: none; pointer-events: none; }
   @keyframes arrowPulse { 0% { transform: translateY(0); opacity: 0.7;} 50% { transform: translateY(18px); opacity: 1;} 100% { transform: translateY(0); opacity: 0.7;} }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  /* Other styles unchanged */
+  #levelmsg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,32,0.88); z-index: 20; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5em; font-weight: bold; text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.5s; flex-direction: column; }
+  #levelmsg.show { opacity: 1; pointer-events: auto; }
+  #continueBtn { margin-top: 1.2em; font-size: 1.1em; background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%); color: #fff; border: none; border-radius: 12px; padding: 0.5em 2.5em; font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif; font-weight: bold; letter-spacing: 2px; box-shadow: 0 2px 16px #0077ff88; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+  #continueBtn:active { background: linear-gradient(90deg, #0077ff 10%, #00e0ff 90%); box-shadow: 0 2px 24px #00e0ffcc; }
+  #gameover { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: rgba(10,10,30,0.93); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif; color: #fff; font-size: 2em; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 16px #0077ff, 0 0 8px #00e0ff; opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+  #gameover.show { opacity: 1; pointer-events: auto; }
+  #restartBtn { margin-top: 1.2em; font-size: 1.1em; background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%); color: #fff; border: none; border-radius: 12px; padding: 0.5em 2.5em; font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif; font-weight: bold; letter-spacing: 2px; box-shadow: 0 2px 16px #0077ff88; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
+  #restartBtn:active { background: linear-gradient(90deg, #0077ff 10%, #00e0ff 90%); box-shadow: 0 2px 24px #00e0ffcc; }
+  #controls { margin-top: 0.7em; color: #aaa; font-size: 1em; text-align: center; user-select: none; }
+  #howtoplay { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(20,16,32,0.92); z-index: 999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #fff; font-size: 1.3em; text-align: center; animation: fadeIn 0.7s; -webkit-user-select: none; user-select: none; touch-action: none; }
+  #howtoplay .icon { font-size: 2.4em; margin: 0.3em; color: #ffde59; text-shadow: 0 0 8px #0077ff; }
+  #howtoplay .hint { margin: 0.6em 0 0.2em 0; font-size: 1.1em; color: #ffde59; }
+  @media (max-width: 400px) { #branding { margin-top: 0.3em; } #kakabanner { font-size: 1.3em; padding: 0.1em 0.3em; } #gamebox, #game, canvas { width: 98vw !important; max-width: 280px !important; } #gamebox, #game { height: 56vw !important; max-height: 560px !important; } #stats { flex-direction: column; gap: 0.2em; margin-left: 0; } .stat-label { min-width: 60px; font-size: 1em; padding: 0.18em 0.7em; } }
 </style>
 </head>
 <body>
@@ -470,7 +481,7 @@ function showGameOver() {
 }
 restartBtn.addEventListener('click', function() {
   gameoverDiv.classList.remove('show');
-  startGame();
+  showHowToPlay();
 });
 
 function hideHowToPlay() {
@@ -480,14 +491,45 @@ function hideHowToPlay() {
     startGame();
   }, 450);
 }
-
-window.addEventListener('DOMContentLoaded', function() {
+function showHowToPlay() {
   howToPlay.style.display = 'flex';
-  howToPlay.addEventListener('touchstart', hideHowToPlay, { passive: false });
-  howToPlay.addEventListener('click', hideHowToPlay, { passive: false });
+  howToPlay.style.animation = 'fadeIn 0.7s';
   resetGameState();
   draw();
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+  showHowToPlay();
+  howToPlay.addEventListener('touchstart', hideHowToPlay, { passive: false });
+  howToPlay.addEventListener('click', hideHowToPlay, { passive: false });
 });
+
+function announceLevel() {
+  const linesNeeded = levelLines[level-1] || 3;
+  levelMsg.innerHTML = `Clear <span style="color:#ffde59">${linesNeeded}</span> line${linesNeeded>1?'s':''} to reach Level ${level+1}!`;
+  showContinueBtn();
+  levelPaused = true;
+  levelMsg.classList.add('show');
+}
+
+function showContinueBtn() {
+  if (!document.getElementById('continueBtn')) {
+    const btn = document.createElement('button');
+    btn.id = 'continueBtn';
+    btn.textContent = 'CONTINUE';
+    btn.onclick = () => {
+      levelPaused = false;
+      levelMsg.classList.remove('show');
+      hideContinueBtn();
+      startLoop();
+    };
+    levelMsg.appendChild(btn);
+  }
+}
+function hideContinueBtn() {
+  const btn = document.getElementById('continueBtn');
+  if (btn) btn.remove();
+}
 
 function startGame() {
   resetGameState();
