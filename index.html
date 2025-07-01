@@ -225,38 +225,19 @@ function collide(arena, piece) {
   return false;
 }
 
-function resetPiece() {
-  const types = 'IJLOSTZ';
-  if (!nextPiece) nextPiece = types[Math.floor(Math.random()*7)];
-  piece = {
-    matrix: createPiece(types.indexOf(nextPiece)),
-    pos: {x: Math.floor((COLS-4)/2), y: 0}
-  };
-  nextPiece = types[Math.floor(Math.random()*7)];
-  if (collide(arena, piece)) {
-    gameOver = true;
-    showGameOver();
-    stopLoop();
-    hidePullDownHint();
-    return;
+function getPieceMaxY(matrix) {
+  let maxY = 0;
+  for (let y = matrix.length - 1; y >= 0; y--) {
+    if (matrix[y].some(cell => cell)) {
+      maxY = y;
+      break;
+    }
   }
-  dropCounter = 0;
-  lastTime = performance.now();
-  lastBlockMoveTime = Date.now();
-  lastPieceY = piece.pos.y;
-  hidePullDownHint();
-}
-
-function createPiece(type) {
-  let shape = SHAPES[type];
-  const matrix = createMatrix(4, 4);
-  shape.forEach(([x, y]) => matrix[y][x] = type);
-  return matrix;
+  return maxY;
 }
 
 function playerDrop() {
   if (gameOver || levelPaused) return;
-  // Only move down if the bottom of the piece is still in bounds
   let maxY = getPieceMaxY(piece.matrix);
   if (piece.pos.y + maxY + 1 >= ROWS || collide(arena, {...piece, pos: {x: piece.pos.x, y: piece.pos.y + 1}})) {
     merge(arena, piece);
@@ -285,17 +266,6 @@ function playerDrop() {
   lastBlockMoveTime = Date.now();
   lastPieceY = piece.pos.y;
   hidePullDownHint();
-}
-
-function getPieceMaxY(matrix) {
-  let maxY = 0;
-  for (let y = matrix.length - 1; y >= 0; y--) {
-    if (matrix[y].some(cell => cell)) {
-      maxY = y;
-      break;
-    }
-  }
-  return maxY;
 }
 
 function playerMove(dir) {
