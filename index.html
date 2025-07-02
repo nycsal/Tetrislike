@@ -540,7 +540,47 @@ function hideContinueBtn() {
   if (btn) btn.remove();
 }
 
-// --- FIXED startGame() function ---
+// --- ADD THESE TWO FUNCTIONS TO MAKE BLOCKS FALL! ---
+function resetPiece() {
+  if (!nextPiece) {
+    // Pick a random shape for the first piece
+    const typeId = Math.floor(Math.random() * (SHAPES.length - 1)) + 1;
+    nextPiece = {
+      matrix: createPieceMatrix(typeId),
+      pos: {x: Math.floor(COLS / 2) - 2, y: 0}
+    };
+  }
+  piece = nextPiece;
+  // Prepare the next piece
+  const typeId = Math.floor(Math.random() * (SHAPES.length - 1)) + 1;
+  nextPiece = {
+    matrix: createPieceMatrix(typeId),
+    pos: {x: Math.floor(COLS / 2) - 2, y: 0}
+  };
+  // If the new piece collides immediately, game over
+  if (collide(arena, piece)) {
+    gameOver = true;
+    showGameOver();
+    stopLoop();
+  }
+}
+
+function createPieceMatrix(typeId) {
+  // Convert the SHAPES flat array into a 4x4 matrix for the piece
+  const shape = SHAPES[typeId];
+  const matrix = [
+    [0,0,0,0],
+    [0,0,0,0],
+    [0,0,0,0],
+    [0,0,0,0]
+  ];
+  shape.forEach(([x, y]) => {
+    matrix[y][x] = typeId;
+  });
+  return matrix;
+}
+// --- END OF NEW CODE ---
+
 function startGame() {
   resetGameState();
   gameStarted = true;
@@ -552,8 +592,6 @@ function startGame() {
   lastPieceY = piece ? piece.pos.y : 0;
   startLoop();
 }
-// --- END FIX ---
-
 </script>
 </body>
 </html>
