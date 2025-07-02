@@ -27,7 +27,15 @@
   #restartBtn { margin-top: 1.2em; font-size: 1.1em; background: linear-gradient(90deg, #00e0ff 10%, #0077ff 90%); color: #fff; border: none; border-radius: 12px; padding: 0.5em 2.5em; font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif; font-weight: bold; letter-spacing: 2px; box-shadow: 0 2px 16px #0077ff88; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; }
   #restartBtn:active { background: linear-gradient(90deg, #0077ff 10%, #00e0ff 90%); box-shadow: 0 2px 24px #00e0ffcc; }
   #controls { margin-top: 0.7em; color: #aaa; font-size: 1em; text-align: center; user-select: none; }
-  #howtoplay { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(20,16,32,0.92); z-index: 999; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #fff; font-size: 1.3em; text-align: center; animation: fadeIn 0.7s; -webkit-user-select: none; user-select: none; touch-action: none; }
+  #howtoplay {
+    position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+    background: rgba(20,16,32,0.92); z-index: 999;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; color: #fff; font-size: 1.3em;
+    text-align: center; animation: fadeIn 0.7s;
+    -webkit-user-select: none; user-select: none; touch-action: none;
+    cursor: pointer;
+  }
   #howtoplay .icon { font-size: 2.4em; margin: 0.3em; color: #ffde59; text-shadow: 0 0 8px #0077ff; }
   #howtoplay .hint { margin: 0.6em 0 0.2em 0; font-size: 1.1em; color: #ffde59; }
   @media (max-width: 400px) { #branding { margin-top: 0.3em; } #kakabanner { font-size: 1.3em; padding: 0.1em 0.3em; } #gamebox, #game, canvas { width: 98vw !important; max-width: 280px !important; } #gamebox, #game { height: 56vw !important; max-height: 560px !important; } #stats { flex-direction: column; gap: 0.2em; margin-left: 0; } .stat-label { min-width: 60px; font-size: 1em; padding: 0.18em 0.7em; } }
@@ -60,7 +68,7 @@
     <b>Tap:</b> Rotate
   </p>
 </div>
-<div id="howtoplay">
+<div id="howtoplay" tabindex="0">
   <div class="hint">How to Play</div>
   <div><span class="icon">&#8592;</span><span>Drag left/right: <b>Move block</b></span></div>
   <div><span class="icon">&#8594;</span><span>Drag left/right: <b>Move block</b></span></div>
@@ -497,8 +505,12 @@ function showHowToPlay() {
 
 window.addEventListener('DOMContentLoaded', function() {
   showHowToPlay();
-  howToPlay.addEventListener('touchstart', hideHowToPlay, { passive: false });
-  howToPlay.addEventListener('click', hideHowToPlay, { passive: false });
+  // The overlay now covers the whole screen and will always start the game on click/tap
+  howToPlay.addEventListener('touchstart', function(e) { e.preventDefault(); hideHowToPlay(); }, { passive: false });
+  howToPlay.addEventListener('mousedown', function(e) { e.preventDefault(); hideHowToPlay(); }, { passive: false });
+  howToPlay.addEventListener('click', function(e) { e.preventDefault(); hideHowToPlay(); }, { passive: false });
+  howToPlay.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') hideHowToPlay(); });
+  howToPlay.focus();
 });
 
 function announceLevel() {
@@ -542,4 +554,3 @@ function startGame() {
 </script>
 </body>
 </html>
-
