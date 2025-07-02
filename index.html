@@ -540,18 +540,20 @@ function hideContinueBtn() {
   if (btn) btn.remove();
 }
 
+// --- FIXED startGame() function ---
 function startGame() {
   resetGameState();
   gameStarted = true;
   resetPiece();
   updateScore();
-  announceLevel();
+  // Removed announceLevel(); so the game starts immediately and blocks fall
   lastTime = performance.now();
   lastBlockMoveTime = Date.now();
   lastPieceY = piece ? piece.pos.y : 0;
   startLoop();
 }
+// --- END FIX ---
+
 </script>
 </body>
 </html>
-
