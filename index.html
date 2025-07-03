@@ -81,7 +81,6 @@ canvas {
   background: #181820;
   border-radius: 12px;
   touch-action: none;
-  /* Prevent blurry scaling on mobile */
   image-rendering: pixelated;
 }
 #pullDownHint {
@@ -801,7 +800,6 @@ function startGame() {
   gameStarted = true;
   resetPiece();
   updateScore();
-  // Removed announceLevel(); so the game starts immediately and blocks fall
   lastTime = performance.now();
   lastBlockMoveTime = Date.now();
   lastPieceY = piece ? piece.pos.y : 0;
@@ -810,4 +808,3 @@ function startGame() {
 </script>
 </body>
 </html>
-
