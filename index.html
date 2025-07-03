@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>KaKaTris</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Annie Cyber Pro</title>
 <style>
 html, body {
   height: 100%;
@@ -11,7 +11,7 @@ html, body {
   background: #0d1b3c;
   color: #fff;
   font-family: 'Segoe UI', Arial, sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
   touch-action: none;
 }
 body {
@@ -21,7 +21,7 @@ body {
   justify-content: flex-start;
   min-height: 100vh;
   width: 100vw;
-  max-width: 320px;
+  max-width: 100vw;
   margin: 0 auto;
 }
 #branding {
@@ -32,7 +32,7 @@ body {
   margin-top: 0.6em;
   margin-bottom: 0.3em;
 }
-#kakabanner {
+#annieBanner {
   font-size: 2em;
   font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
   font-weight: 900;
@@ -50,17 +50,10 @@ body {
   box-shadow: 0 4px 22px #0077ff44;
   display: inline-block;
 }
-#gamebox, #game, canvas {
-  width: 280px !important;
-  height: 560px !important;
-  max-width: 280px !important;
-  max-height: 560px !important;
-  min-width: 280px !important;
-  min-height: 560px !important;
-  box-sizing: border-box;
-}
 #gamebox {
-  position: relative;
+  width: 90vw;
+  max-width: 340px;
+  aspect-ratio: 7/14;
   margin: 0 auto;
   display: flex;
   justify-content: center;
@@ -69,42 +62,26 @@ body {
   touch-action: none;
 }
 #game {
+  position: relative;
+  width: 100%;
+  height: 100%;
   background: #181820;
   border: 4px solid #00e0ff;
   border-radius: 16px;
   box-shadow: 0 0 24px #0077ffaa;
-  position: relative;
-  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   touch-action: none;
+  overflow: hidden;
 }
 canvas {
   display: block;
+  width: 100%;
+  height: 100%;
   background: #181820;
   border-radius: 12px;
   touch-action: none;
-}
-#stats {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  margin-top: 0.7em;
-  margin-bottom: 0.2em;
-  width: 100%;
-  gap: 0.5em;
-}
-.stat-label {
-  font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
-  font-size: 1.05em;
-  color: #fff;
-  background: linear-gradient(90deg, #0077ff 0%, #00e0ff 100%);
-  border-radius: 16px;
-  padding: 0.28em 1.3em;
-  box-shadow: 0 2px 12px #00e0ff33;
-  border: 1.5px solid #00e0ff;
-  letter-spacing: 1.5px;
-  text-align: center;
-  min-width: 70px;
 }
 #pullDownHint {
   position: absolute;
@@ -218,6 +195,29 @@ canvas {
   background: linear-gradient(90deg, #0077ff 10%, #00e0ff 90%);
   box-shadow: 0 2px 24px #00e0ffcc;
 }
+#stats {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.7em;
+  margin-bottom: 0.2em;
+  width: 100%;
+  gap: 0.5em;
+}
+.stat-label {
+  font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  font-size: 1.05em;
+  color: #fff;
+  background: linear-gradient(90deg, #0077ff 0%, #00e0ff 100%);
+  border-radius: 16px;
+  padding: 0.28em 1.3em;
+  box-shadow: 0 2px 12px #00e0ff33;
+  border: 1.5px solid #00e0ff;
+  letter-spacing: 1.5px;
+  text-align: center;
+  min-width: 70px;
+}
 #controls {
   margin-top: 0.7em;
   color: #aaa;
@@ -238,14 +238,19 @@ canvas {
 #howtoplay .hint { margin: 0.6em 0 0.2em 0; font-size: 1.1em; color: #ffde59; }
 @media (max-width: 400px) {
   #branding { margin-top: 0.3em; }
-  #kakabanner { font-size: 1.3em; padding: 0.1em 0.3em; }
-  #gamebox, #game, canvas {
-    width: 98vw !important;
-    max-width: 280px !important;
-    height: 196vw !important;
-    max-height: 560px !important;
-    min-width: 98vw !important;
-    min-height: 196vw !important;
+  #annieBanner { font-size: 1.3em; padding: 0.1em 0.3em; }
+  #gamebox {
+    width: 98vw;
+    max-width: 98vw;
+    min-width: 98vw;
+  }
+  #game, canvas {
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 100vw !important;
+    max-height: 100vw !important;
   }
   #stats { flex-direction: column; gap: 0.2em; margin-left: 0; }
   .stat-label { min-width: 60px; font-size: 1em; padding: 0.18em 0.7em; }
@@ -254,7 +259,7 @@ canvas {
 </head>
 <body>
 <div id="branding">
-  <div id="kakabanner">KaKaTris</div>
+  <div id="annieBanner">Annie Cyber Pro</div>
 </div>
 <div id="gamebox">
   <div id="game">
@@ -289,8 +294,7 @@ canvas {
 </div>
 <script>
 const COLS = 8, ROWS = 20;
-// FIXED: Calculate block size based on canvas height and ROWS to ensure all rows are visible
-const BLOCK = Math.floor(560 / ROWS);
+const BLOCK = 28; // 560/20 = 28
 const COLORS = [null,"#00ffff","#0000ff","#ff7f00","#ffff00","#00ff00","#800080","#ff0000"];
 const SHAPES = [[],[[0,1],[1,1],[2,1],[3,1]],[[0,0],[0,1],[1,1],[2,1]],[[2,0],[0,1],[1,1],[2,1]],[[1,0],[2,0],[1,1],[2,1]],[[1,0],[2,0],[0,1],[1,1]],[[1,0],[0,1],[1,1],[2,1]],[[0,0],[1,0],[1,1],[2,1]]];
 const levelLines = [3,4,5,6,7,8,9,999];
@@ -805,4 +809,3 @@ function startGame() {
 </script>
 </body>
 </html>
-
