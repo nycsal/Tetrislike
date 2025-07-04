@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Annie Cyber Pro</title>
 <style>
 html, body {
@@ -292,8 +292,8 @@ canvas {
   <div style="margin-top:1.2em;font-size:1em;color:#fff;opacity:0.8;">Tap anywhere to start</div>
 </div>
 <script>
-const COLS = 8, ROWS = 20;
-const BLOCK = 28; // 560/20 = 28
+const COLS = 10, ROWS = 20;
+const BLOCK = 28; // 280/10 = 28
 const COLORS = [null,"#00ffff","#0000ff","#ff7f00","#ffff00","#00ff00","#800080","#ff0000"];
 const SHAPES = [[],[[0,1],[1,1],[2,1],[3,1]],[[0,0],[0,1],[1,1],[2,1]],[[2,0],[0,1],[1,1],[2,1]],[[1,0],[2,0],[1,1],[2,1]],[[1,0],[2,0],[0,1],[1,1]],[[1,0],[0,1],[1,1],[2,1]],[[0,0],[1,0],[1,1],[2,1]]];
 const levelLines = [3,4,5,6,7,8,9,999];
@@ -807,4 +807,3 @@ function startGame() {
 </script>
 </body>
 </html>
-
